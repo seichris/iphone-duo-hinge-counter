@@ -19,7 +19,9 @@ struct DemoView: View {
                         .font(.system(size: 72, weight: .semibold, design: .rounded))
                         .accessibilityIdentifier("demoCount")
                     Text("simulated opens").foregroundStyle(.secondary)
-                    Slider(value: Binding(get: { angle }, set: sample), in: 0...180)
+                    // An explicit closure avoids a Swift 6.1 x86_64 IRGen crash
+                    // when converting the actor-isolated method reference to a setter.
+                    Slider(value: Binding(get: { angle }, set: { sample($0) }), in: 0...180)
                         .accessibilityLabel("Simulated hinge angle")
                     Text("\(Int(angle))°").monospacedDigit()
                     HStack {
