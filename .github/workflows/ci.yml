@@ -1,0 +1,67 @@
+name: Swift and iOS validation
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: counter-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+          xcrun --sdk iphonesimulator --show-sdk-version
+      - name: Core tests
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee core-tests.log
+      - name: Generate and validate project
+        run: |
+          python3 scripts/generate_project.py
+          python3 scripts/check_project.py
+          plutil -lint FoldCounter.xcodeproj/project.pbxproj
+      - name: Build app and widget
+        run: |
+          set -o pipefail
+          xcodebuild -project FoldCounter.xcodeproj -scheme FoldCounter \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ios-build.log
+      - name: UI smoke tests
+        run: |
+          set -o pipefail
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for devices in d["devices"].values() for v in devices if v["name"].startswith("iPhone") and v.get("isAvailable",False)))')
+          xcodebuild -project FoldCounter.xcodeproj -scheme FoldCounter \
+            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+            -derivedDataPath DerivedData -resultBundlePath UITestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ui-tests.log
+      - name: Check announced Duo SDK path when available
+        run: |
+          SDK=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          if python3 -c 'import sys; p=[int(x) for x in sys.argv[1].split(".")[:2]]; p += [0]*(2-len(p)); sys.exit(0 if p >= [27,1] else 1)' "$SDK"; then
+            set -o pipefail
+            xcodebuild -project FoldCounter.xcodeproj -scheme 'FoldCounter Duo' \
+              -destination 'generic/platform=iOS Simulator' \
+              -derivedDataPath DerivedDataDuo CODE_SIGNING_ALLOWED=NO build 2>&1 | tee duo-build.log
+          else
+            echo "::notice::Duo SDK validation NOT RUN: selected SDK is $SDK, requires announced 27.1 APIs."
+            echo "Duo SDK adapter was not compiled: installed SDK $SDK." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-evidence
+          path: |
+            *-tests.log
+            *-build.log
+            UITestResults.xcresult
+          if-no-files-found: warn
+          retention-days: 7
