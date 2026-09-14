@@ -1,0 +1,87 @@
+{
+  "checked_on": "2026-09-14",
+  "source": "https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications",
+  "groups": {
+    "iphone-6.9": {
+      "portrait_sizes": [
+        [
+          1260,
+          2736
+        ],
+        [
+          1290,
+          2796
+        ],
+        [
+          1320,
+          2868
+        ]
+      ],
+      "required": true
+    },
+    "ipad-13": {
+      "portrait_sizes": [
+        [
+          2064,
+          2752
+        ],
+        [
+          2048,
+          2732
+        ]
+      ],
+      "required": true
+    },
+    "duo-outer": {
+      "portrait_sizes": [
+        [
+          1398,
+          2034
+        ]
+      ],
+      "required": true
+    },
+    "duo-inner": {
+      "portrait_sizes": [
+        [
+          2007,
+          2853
+        ]
+      ],
+      "required": true
+    }
+  },
+  "notes": "Duo groups are this project's release requirement, not a claim Apple mandates separate slots. Confirm actual App Store Connect slots after SDK release. iPad is included because TARGETED_DEVICE_FAMILY is 1,2. Landscape uses reversed dimensions. Do not resize ordinary iPhone images to impersonate Duo captures.",
+  "storyboard": [
+    {
+      "order": 1,
+      "screen": "Today",
+      "headline": "Your recorded openings",
+      "caption": "Observed while active. Manual entries stay labeled."
+    },
+    {
+      "order": 2,
+      "screen": "History",
+      "headline": "See your daily pattern",
+      "caption": "7-, 30- and 90-day history."
+    },
+    {
+      "order": 3,
+      "screen": "Widget",
+      "headline": "Saved totals at a glance",
+      "caption": "Snapshots, not background monitoring."
+    },
+    {
+      "order": 4,
+      "screen": "Settings",
+      "headline": "Your data. Your control.",
+      "caption": "CSV export and JSON backup."
+    },
+    {
+      "order": 5,
+      "screen": "Privacy Policy",
+      "headline": "Private by design",
+      "caption": "No account, ads or analytics."
+    }
+  ]
+}

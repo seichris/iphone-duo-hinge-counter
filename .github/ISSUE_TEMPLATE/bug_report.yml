@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a reproducible problem without uploading private data.
+body:
+  - type: markdown
+    attributes:
+      value: "This issue is public. Do not attach backups, personal identifiers, credentials or private screenshots."
+  - type: input
+    id: version
+    attributes:
+      label: App version and build
+      description: Find this in Settings.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device model and OS version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected result and actual result
+      description: For counting, say whether the app stayed active and whether a full close-to-open movement was observed.
+    validations:
+      required: true

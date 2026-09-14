@@ -30,6 +30,13 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Help & Privacy") {
+                NavigationLink("Privacy Policy") { HelpView(page: .privacy) }
+                    .accessibilityIdentifier("privacyPolicy")
+                NavigationLink("Help & Support") { HelpView(page: .support) }
+                    .accessibilityIdentifier("helpSupport")
+                LabeledContent("Version", value: appVersion)
+            }
             Section {
                 Toggle("Automatic foreground tracking", isOn: Binding(
                     get: { model.archive?.automaticTrackingEnabled ?? false },
@@ -38,7 +45,7 @@ struct SettingsView: View {
                 LabeledContent("Status", value: model.trackingTitle)
             } header: { Text("Tracking") } footer: {
                 Text(model.trackingDetail + " Counting requires observing ≤10°, then ≥170°, at least 0.35 seconds apart. "
-                     + "These are this app’s thresholds, pending physical-device calibration.")
+                     + "These are this app’s counting thresholds, not a hinge-health measurement.")
             }
             if let error = model.storageError {
                 Section("Storage") {
@@ -57,7 +64,7 @@ struct SettingsView: View {
                 Button("Restore a JSON backup") { importing = true }.disabled(model.pendingSave)
                 Button("Erase all counts", role: .destructive) { confirmErase = true }
             } header: { Text("Your data") } footer: {
-                Text("Everything is stored on this device. No account, ads, analytics, or network requests. "
+                Text("Everything is stored on this device. No account, ads or analytics. Counting works offline. "
                      + "Your OS/device backup settings can include app data. Exports leave the app only when you share them. "
                      + "Restoring replaces the current history; it does not merge two counters.")
             }
@@ -66,9 +73,11 @@ struct SettingsView: View {
                 Text("Days use your local date at recording time and are not rewritten when you travel. "
                      + "The daily average includes every calendar day since tracking began, including zero days and today. "
                      + "All-time means recorded by this app, not lifetime hardware usage.")
+                #if DEBUG
                 Text("iPhone Duo integration: announced API, pending SDK and hardware validation. "
                      + "The standard build supports manual counting and demo mode. The Duo scheme enables the new API.")
-                Text("Independent app. Not affiliated with Apple or TMC Apps. No hinge durability rating is assumed.")
+                #endif
+                Text("Independent app. Not affiliated with or endorsed by Apple. No hinge durability rating is assumed.")
                     .font(.footnote).foregroundStyle(.secondary)
             } header: { Text("About Fold Counter") }
         }
@@ -105,6 +114,12 @@ struct SettingsView: View {
                  + "Existing history will be replaced, not added to it.")
         }
         .sheet(isPresented: $demo) { DemoView() }
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+        return "\(version) (\(build))"
     }
 
     private func prepareExport(csv: Bool) {

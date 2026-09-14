@@ -1,0 +1,37 @@
+{
+  "source_commit": null,
+  "approvals": {
+    "name_and_rights": {
+      "passed": false,
+      "evidence": null
+    },
+    "sdk_and_hardware": {
+      "passed": false,
+      "evidence": null
+    },
+    "testflight_and_accessibility": {
+      "passed": false,
+      "evidence": null
+    },
+    "screenshots": {
+      "passed": false,
+      "evidence": null
+    },
+    "privacy_and_compliance": {
+      "passed": false,
+      "evidence": null
+    },
+    "signing_and_app_record": {
+      "passed": false,
+      "evidence": null
+    },
+    "pricing_and_storefronts": {
+      "passed": false,
+      "evidence": null
+    },
+    "support_and_privacy_urls": {
+      "passed": false,
+      "evidence": null
+    }
+  }
+}

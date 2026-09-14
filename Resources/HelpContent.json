@@ -1,0 +1,54 @@
+{
+  "updated": "2026-09-14",
+  "privacy_url": "https://seichris.github.io/iphone-duo-fold-counter/privacy.html",
+  "support_url": "https://seichris.github.io/iphone-duo-fold-counter/support.html",
+  "issue_url": "https://github.com/seichris/iphone-duo-fold-counter/issues/new",
+  "privacy": [
+    {
+      "title": "Your counter stays on your device",
+      "body": "Fold Counter stores daily recorded opening totals, manual and observed count attribution, dates and your tracking preference in the app sandbox. The app does not send these records to the developer. It has no accounts, advertising, tracking or third-party analytics SDKs."
+    },
+    {
+      "title": "Hinge observations",
+      "body": "On supported hardware, the app uses live hinge observations while an app scene is active. Angle and observation timing are processed locally to recognize a close-to-open movement. Raw angle samples are not saved in your history. Missed openings during lock, suspension or use of another app are not reconstructed."
+    },
+    {
+      "title": "Widgets, backups and exports",
+      "body": "The app shares a copy of saved totals with its own widget extension through an App Group on this device. Your operating-system backup settings may include app data. CSV and JSON files leave the app only when you choose an export or sharing destination. Those services process your files under their own policies."
+    },
+    {
+      "title": "Retention and deletion",
+      "body": "Records remain until you erase them, replace them by restoring a backup, or remove the app and its data. Settings > Erase all counts clears the in-app history and attempts to replace the widget snapshot; check the widget status afterward. Copies in device backups, exported files, a destination service or a previously rendered widget are not remotely erased. Manage those copies with the relevant system or service."
+    },
+    {
+      "title": "Support and external websites",
+      "body": "Opening a support or privacy link hands the URL to your browser. GitHub hosts this website and the public issue tracker and may process connection information under its own privacy statement. If you file an issue, information you choose to submit is public and processed by GitHub. Do not include backups, personal identifiers or private information. The app never uploads a support report automatically."
+    },
+    {
+      "title": "Contact and changes",
+      "body": "Contact the project maintainer through the linked GitHub issue tracker with non-sensitive questions. This policy applies to the functionality described here. We will update it when that functionality or data handling changes."
+    }
+  ],
+  "support": [
+    {
+      "title": "Why does the count miss openings?",
+      "body": "Automatic counting requires a supported hinge, tracking enabled, and a complete close-to-open movement observed while the app is active. Background, lock-screen and display-handoff interruptions can break observation. The app does not query a lifetime hardware counter. Add a clearly labeled manual entry when needed."
+    },
+    {
+      "title": "What counts as one opening?",
+      "body": "The current detector requires an observed angle of 10 degrees or less followed by 170 degrees or more, at least 0.35 seconds apart. Partial folds do not rearm it. These are app thresholds, not an Apple specification or a hardware-durability test."
+    },
+    {
+      "title": "Why does my widget look old?",
+      "body": "Widgets show saved snapshots and iOS controls refresh timing. They do not keep hinge monitoring alive. Open the app, check Settings > Widgets for a sharing error, and allow iOS to refresh. During testing, the app and extension must have matching App Group signing."
+    },
+    {
+      "title": "Back up, restore or erase",
+      "body": "In Settings, export a JSON backup before replacing or erasing history. CSV is for reading daily totals, not restoring. Restore replaces history; it does not merge it. If storage fails, counting pauses: retry saving or loading, or export the original file for your own recovery. Never post that file publicly."
+    },
+    {
+      "title": "Report a problem",
+      "body": "Use the public GitHub issue tracker below. Include the app version, operating-system version, device model, reproducible steps and whether the app was active. Remove personal information from screenshots. There is no need to upload your counter backup."
+    }
+  ]
+}

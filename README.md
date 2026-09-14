@@ -61,3 +61,16 @@ No backend, sign-in, network requests, advertising, analytics, third-party SDKs,
 Days are Gregorian local dates at recording time and do not shift when traveling. Daily averages divide all recorded opens, including manual entries, by inclusive calendar days since tracking began, including zero days and the current partial day. Time-zone travel across the date line can temporarily make the current date earlier than a recorded bucket; all-time counts are preserved. A zero bucket means nothing was recorded, not that the phone was never opened.
 
 The app is independent of Apple and TMC Apps. Distribution licensing has not been selected; this repository does not import a third-party app's license or grant a new one implicitly.
+
+
+## App Store preparation
+
+The release-preparation pack is in [docs/APP_STORE_RELEASE.md](docs/APP_STORE_RELEASE.md), with [ASO and web SEO research](docs/ASO_RESEARCH.md) and candidate English metadata in `appstore/metadata/en-US.json`.
+
+```sh
+python3 -m unittest discover -s scripts/tests -v
+python3 scripts/build_site.py --check
+python3 scripts/release_preflight.py
+```
+
+A passing draft check is not permission to publish. The strict preflight requires current-commit evidence, real screenshots and live support/privacy pages. The standard scheme is now **Debug-only**; non-Duo distribution builds are intentionally rejected. Use `FoldCounter Duo` for the final archive only after its SDK and physical-device gates pass. Signing, App Store Connect account setup and actual submission are not performed by this repository.
