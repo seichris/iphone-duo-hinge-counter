@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "marketing_version": "1.0.0",
+  "build_number": "2",
+  "bundle_identifier": "com.seichris.foldcounter",
+  "app_group_identifier": "group.com.seichris.foldcounter",
+  "primary_locale": "en-US",
+  "primary_category": "UTILITIES",
+  "secondary_category": null,
+  "release_mode": "manual",
+  "target": "duo-foreground",
+  "required_sdk": "27.1",
+  "website_base_url": "https://seichris.github.io/iphone-duo-fold-counter/",
+  "required_approvals": [
+    "name_and_rights",
+    "sdk_and_hardware",
+    "testflight_and_accessibility",
+    "screenshots",
+    "privacy_and_compliance",
+    "signing_and_app_record",
+    "pricing_and_storefronts",
+    "support_and_privacy_urls"
+  ],
+  "status": "blocked_pending_release_evidence"
+}

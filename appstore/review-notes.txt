@@ -1,0 +1,18 @@
+REVIEW-NOTE DRAFT — do not paste until the Duo SDK and hardware release gates pass.
+
+Fold Counter is an independent offline utility for recording openings on a supported foldable device. It offers daily/all-time recorded totals, local history charts, manual entry, CSV export, JSON backup/restore and widget snapshots. There is no login or account and no in-app purchase flow.
+
+Automatic observation is foreground-only. It does not keep running while locked, suspended, terminated or while another app is active; it does not reconstruct missed openings. Opening the app on an already-open device does not add a count. Widgets do not monitor sensors. The app does not measure hinge health or remaining hardware life.
+
+Review steps:
+1. On the supported device and validated OS, launch the app. Read the visible tracking-coverage notice.
+2. Leave the app active. Observe a complete close-to-open transition. Confirm one observed opening, subject to the measured display-handoff behavior documented in the attached device-test evidence.
+3. Use + > Add manual opening. Confirm that manual attribution is separate from observed counts.
+4. Open History; switch among 7, 30 and 90 days.
+5. Open Settings > Privacy Policy and Help & Support; the content is available offline.
+6. Export CSV/JSON. Restore only a throwaway test backup after the replacement confirmation. Erase only test data after confirmation.
+7. Add the widget; confirm it displays a saved snapshot, with refresh timing controlled by iOS.
+
+Attach a real-device recording and the exact tested device/OS/build information through App Store Connect, not this public repository. The unsaved demo can illustrate the counting rule, but is not evidence of physical hinge integration. Provide actual review contact details privately in App Store Connect.
+
+Remove this draft heading and replace this paragraph with the measured hardware/OS behavior before submission. Do not submit the regular Debug compatibility scheme, and do not describe a simulated event as a hardware event.

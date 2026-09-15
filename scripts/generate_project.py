@@ -90,9 +90,10 @@ def target(name: str, files: list[str], product_type: str, extension: str,
     resources = [] if name.endswith("UITests") else [file_ref("Resources/PrivacyInfo.xcprivacy")]
     if name == "FoldCounter":
         resources.append(file_ref("Resources/Assets.xcassets"))
+        resources.append(file_ref("Resources/HelpContent.json"))
     phases.append(phase(name, "Resources", "PBXResourcesBuildPhase", resources))
     settings = {"PRODUCT_NAME": "$(TARGET_NAME)", "PRODUCT_BUNDLE_IDENTIFIER": bundle_id,
-                "CODE_SIGN_STYLE": "Automatic", "DEVELOPMENT_TEAM": "",
+                "CODE_SIGN_STYLE": "Automatic", "DEVELOPMENT_TEAM": "$(inherited)",
                 "TARGETED_DEVICE_FAMILY": "1,2", "SUPPORTS_MACCATALYST": "NO",
                 "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator",
                 "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks"}
@@ -174,6 +175,7 @@ def generate_icon() -> None:
 
 def main() -> None:
     generate_icon()
+    release = json.loads((ROOT / "appstore/release.json").read_text())
     core = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Sources/FoldCounterCore").glob("*.swift"))
     app = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "App").glob("*.swift"))
     widget = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Widget").glob("*.swift"))
@@ -181,11 +183,11 @@ def main() -> None:
     if not all((core, app, widget, tests)):
         raise SystemExit("Missing source files. Run this script from a complete repository checkout.")
     targets = [target("FoldCounterWidget", core + widget, "wrapper.app-extension", "appex",
-                      "com.seichris.foldcounter.widget", "Resources/Widget-Info.plist"),
+                      "$(APP_BUNDLE_IDENTIFIER).widget", "Resources/Widget-Info.plist"),
                target("FoldCounter", core + app, "wrapper.application", "app",
-                      "com.seichris.foldcounter", "Resources/App-Info.plist", ["FoldCounterWidget"]),
+                      "$(APP_BUNDLE_IDENTIFIER)", "Resources/App-Info.plist", ["FoldCounterWidget"]),
                target("FoldCounterUITests", tests, "wrapper.cfbundle", "xctest",
-                      "com.seichris.foldcounter.uitests", None, ["FoldCounter"])]
+                      "$(APP_BUNDLE_IDENTIFIER).uitests", None, ["FoldCounter"])]
     products = add("products", "PBXGroup", name="Products", sourceTree="<group>",
                    children=[ident("product:" + name) for name in ("FoldCounter", "FoldCounterWidget", "FoldCounterUITests")])
     root = add("root", "PBXGroup", sourceTree="<group>",
@@ -193,8 +195,9 @@ def main() -> None:
     configs = configuration_list("project", {
         "SDKROOT": "iphoneos", "IPHONEOS_DEPLOYMENT_TARGET": "18.0", "SWIFT_VERSION": "6.0",
         "SWIFT_STRICT_CONCURRENCY": "complete", "CLANG_ENABLE_MODULES": "YES", "CLANG_ENABLE_OBJC_ARC": "YES",
-        "CURRENT_PROJECT_VERSION": "1", "MARKETING_VERSION": "0.1.0",
-        "APP_GROUP_IDENTIFIER": "group.com.seichris.foldcounter", "ENABLE_USER_SCRIPT_SANDBOXING": "YES"
+        "CURRENT_PROJECT_VERSION": release["build_number"], "MARKETING_VERSION": release["marketing_version"],
+        "APP_BUNDLE_IDENTIFIER": release["bundle_identifier"],
+        "APP_GROUP_IDENTIFIER": release["app_group_identifier"], "ENABLE_USER_SCRIPT_SANDBOXING": "YES"
     })
     project = add("project", "PBXProject", attributes={"LastUpgradeCheck": "1600"},
                   buildConfigurationList=configs, compatibilityVersion="Xcode 14.0", developmentRegion="en",

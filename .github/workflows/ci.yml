@@ -14,6 +14,14 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Select upload-baseline toolchain
+        id: xcode
+        run: python3 scripts/select_xcode.py
+      - name: Release pack checks
+        run: |
+          python3 -m unittest discover -s scripts/tests -v
+          python3 scripts/build_site.py --check
+          python3 scripts/release_preflight.py
       - name: Toolchain
         run: |
           swift --version
@@ -42,18 +50,19 @@ jobs:
             -destination "platform=iOS Simulator,id=$DEVICE_ID" \
             -derivedDataPath DerivedData -resultBundlePath UITestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ui-tests.log
-      - name: Check announced Duo SDK path when available
+      - name: Export actual UI screenshot attachments
+        run: xcrun xcresulttool export attachments --path UITestResults.xcresult --output-path screenshot-evidence
+      - name: Compile Duo SDK path
+        if: steps.xcode.outputs.duo_available == 'true'
         run: |
-          SDK=$(xcrun --sdk iphonesimulator --show-sdk-version)
-          if python3 -c 'import sys; p=[int(x) for x in sys.argv[1].split(".")[:2]]; p += [0]*(2-len(p)); sys.exit(0 if p >= [27,1] else 1)' "$SDK"; then
-            set -o pipefail
-            xcodebuild -project FoldCounter.xcodeproj -scheme 'FoldCounter Duo' \
-              -destination 'generic/platform=iOS Simulator' \
-              -derivedDataPath DerivedDataDuo CODE_SIGNING_ALLOWED=NO build 2>&1 | tee duo-build.log
-          else
-            echo "::notice::Duo SDK validation NOT RUN: selected SDK is $SDK, requires announced 27.1 APIs."
-            echo "Duo SDK adapter was not compiled: installed SDK $SDK." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          set -o pipefail
+          xcodebuild -project FoldCounter.xcodeproj -scheme 'FoldCounter Duo' \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath DerivedDataDuo CODE_SIGNING_ALLOWED=NO build 2>&1 | tee duo-build.log
+      - name: Report unavailable Duo SDK
+        if: steps.xcode.outputs.duo_available != 'true'
+        run: |
+          echo "Duo API build SKIPPED: selected SDK is below 27.1. Regular UI success is NOT publication readiness." >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve validation evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -63,5 +72,6 @@ jobs:
             *-tests.log
             *-build.log
             UITestResults.xcresult
+            screenshot-evidence/
           if-no-files-found: warn
           retention-days: 7

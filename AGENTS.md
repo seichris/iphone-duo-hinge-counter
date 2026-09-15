@@ -10,3 +10,8 @@
 - Core changes need Swift tests, including temporal/lifecycle edge cases. Run swift test and generate/check the Xcode project. Report exactly which SDK builds were actually executed.
 - Preserve manual-versus-observed attribution, explicit destructive confirmations, and the foreground-only UI disclosure.
 - Do not add a license, tracking, cloud account, or analytics without an explicit product decision.
+
+- Release copy: edit `appstore/metadata/en-US.json`; run the release preflight. Keep foreground-only, non-lifetime and non-diagnostic limitations visible.
+- Help/privacy text: edit `Resources/HelpContent.json`, regenerate `site/` with `scripts/build_site.py`, and test app resource inclusion.
+- Keep all signing secrets, account contact details, unredacted screenshots and release evidence in ignored `.release/` or outside the repository. Do not fabricate a passing approval.
+- The standard non-Duo Release build intentionally fails. Do not remove `ReleaseGuard.swift` to make distribution appear ready without hardware validation.
