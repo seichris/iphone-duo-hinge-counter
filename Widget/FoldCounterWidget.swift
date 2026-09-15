@@ -41,7 +41,7 @@ private struct CounterWidgetView: View {
     var body: some View {
         let summary = entry.archive?.summary(now: entry.date, timeZone: .current)
         VStack(alignment: .leading, spacing: family == .accessoryRectangular ? 2 : 8) {
-            Label("Fold Counter", systemImage: "rectangle.split.2x1")
+            Label("Hinge Counter", systemImage: "rectangle.split.2x1")
                 .font(.caption.weight(.semibold))
             if let summary {
                 Text(summary.today.formatted())
@@ -74,7 +74,7 @@ struct FoldCounterWidget: Widget {
             CounterWidgetView(entry: entry)
         }
         .configurationDisplayName("Recorded opens")
-        .description("See saved opening counts. The widget does not track folds in the background.")
+        .description("See saved opening counts. The widget does not track hinge openings in the background.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }

@@ -80,7 +80,7 @@ struct DashboardView: View {
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("Fold Counter")
+        .navigationTitle("Hinge Counter")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showManualConfirmation = true } label: {

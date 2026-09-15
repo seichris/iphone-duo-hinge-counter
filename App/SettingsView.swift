@@ -25,7 +25,7 @@ struct SettingsView: View {
     @State private var exporting = false
     @State private var document: CounterDocument?
     @State private var exportType = UTType.json
-    @State private var exportName = "FoldCounter-backup"
+    @State private var exportName = "HingeCounter-backup"
     @State private var demo = false
 
     var body: some View {
@@ -79,7 +79,7 @@ struct SettingsView: View {
                 #endif
                 Text("Independent app. Not affiliated with or endorsed by Apple. No hinge durability rating is assumed.")
                     .font(.footnote).foregroundStyle(.secondary)
-            } header: { Text("About Fold Counter") }
+            } header: { Text("About Hinge Counter") }
         }
         .navigationTitle("Settings")
         .confirmationDialog("Erase all saved counts?", isPresented: $confirmErase, titleVisibility: .visible) {
@@ -127,7 +127,7 @@ struct SettingsView: View {
         do {
             document = CounterDocument(data: csv ? Data(archive.csv().utf8) : try ArchiveFile.encode(archive))
             exportType = csv ? .commaSeparatedText : .json
-            exportName = csv ? "FoldCounter-history" : "FoldCounter-backup"
+            exportName = csv ? "HingeCounter-history" : "HingeCounter-backup"
             exporting = true
         } catch { model.actionError = error.localizedDescription }
     }

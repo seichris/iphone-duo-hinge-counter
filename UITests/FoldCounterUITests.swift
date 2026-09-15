@@ -9,7 +9,7 @@ final class FoldCounterUITests: XCTestCase {
         XCTAssertTrue(count.waitForExistence(timeout: 10))
         XCTAssertEqual(count.value as? String, "0")
         app.buttons["addManual"].tap()
-        app.buttons["confirmManual"].tap()
+        app.buttons["confirmManual"].firstMatch.tap()
         XCTAssertEqual(count.value as? String, "1")
         app.swipeUp()
         app.buttons["openDemo"].tap()

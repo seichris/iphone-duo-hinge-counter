@@ -56,7 +56,7 @@ final class CounterModel {
 
     var trackingDetail: String {
         "Automatic counts require this app to be active and a complete close-to-open transition to be observed. "
-        + "Folds while locked, in another app, suspended, or terminated are not recovered."
+        + "Openings while locked, in another app, suspended, or terminated are not recovered."
     }
 
     func setScene(_ id: UUID, active: Bool) {

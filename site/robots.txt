@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://seichris.github.io/iphone-duo-fold-counter/sitemap.xml
+Sitemap: https://seichris.github.io/iphone-duo-hinge-counter/sitemap.xml

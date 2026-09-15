@@ -1,12 +1,12 @@
 {
   "updated": "2026-09-14",
-  "privacy_url": "https://seichris.github.io/iphone-duo-fold-counter/privacy.html",
-  "support_url": "https://seichris.github.io/iphone-duo-fold-counter/support.html",
-  "issue_url": "https://github.com/seichris/iphone-duo-fold-counter/issues/new",
+  "privacy_url": "https://seichris.github.io/iphone-duo-hinge-counter/privacy.html",
+  "support_url": "https://seichris.github.io/iphone-duo-hinge-counter/support.html",
+  "issue_url": "https://github.com/seichris/iphone-duo-hinge-counter/issues/new",
   "privacy": [
     {
       "title": "Your counter stays on your device",
-      "body": "Fold Counter stores daily recorded opening totals, manual and observed count attribution, dates and your tracking preference in the app sandbox. The app does not send these records to the developer. It has no accounts, advertising, tracking or third-party analytics SDKs."
+      "body": "Hinge Counter stores daily recorded opening totals, manual and observed count attribution, dates and your tracking preference in the app sandbox. The app does not send these records to the developer. It has no accounts, advertising, tracking or third-party analytics SDKs."
     },
     {
       "title": "Hinge observations",

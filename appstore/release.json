@@ -10,7 +10,7 @@
   "release_mode": "manual",
   "target": "duo-foreground",
   "required_sdk": "27.1",
-  "website_base_url": "https://seichris.github.io/iphone-duo-fold-counter/",
+  "website_base_url": "https://seichris.github.io/iphone-duo-hinge-counter/",
   "required_approvals": [
     "name_and_rights",
     "sdk_and_hardware",

@@ -56,9 +56,9 @@ Complete the age-rating questionnaire from the actual functionality. There is no
 
 In this repository's Settings > Pages, choose GitHub Actions as the publishing source. Run **Publish support site (manual)** on `main`; it uploads only `site/`, not the repository or private release files. The PR does not deploy automatically. Expected URLs are:
 
-- `https://seichris.github.io/iphone-duo-fold-counter/`
-- `https://seichris.github.io/iphone-duo-fold-counter/support.html`
-- `https://seichris.github.io/iphone-duo-fold-counter/privacy.html`
+- `https://seichris.github.io/iphone-duo-hinge-counter/`
+- `https://seichris.github.io/iphone-duo-hinge-counter/support.html`
+- `https://seichris.github.io/iphone-duo-hinge-counter/privacy.html`
 
 These are intended endpoints, **not verified live URLs**. Policy edits belong in `Resources/HelpContent.json`; run `python3 scripts/build_site.py` and commit regenerated pages. Update the honest prelaunch banner and final availability link only when launch status actually changes. Do not add an App Store badge with a fabricated app ID.
 

@@ -1,17 +1,17 @@
-# Fold Counter for iPhone Duo
+# Hinge Counter for iPhone Duo
 
-A native, offline SwiftUI opening counter inspired by [Fold Counter for Foldables](https://play.google.com/store/apps/details?id=com.themobilecoder.foldcounter). Original implementation and icon; no Android code or assets are copied.
+A native, offline SwiftUI hinge-opening counter. The app uses the supplied Duo Counter logo; no Android code or assets are copied.
 
-**Status — September 14, 2026:** the counter, history, backup tools, demo, and WidgetKit extension are implemented. The announced iPhone Duo hinge integration is isolated behind the **FoldCounter Duo** scheme. It has not been type-checked against the forthcoming SDK or tested on physical hardware. Apple's [developer hub](https://developer.apple.com/iphone-duo/) currently lists Xcode 27.1 beta as coming later this month. The regular scheme does **not** claim to detect a hinge.
+**Status — September 14, 2026:** Hinge Counter, history, backup tools, demo, and the WidgetKit extension are implemented. The announced iPhone Duo hinge integration is isolated behind the **FoldCounter Duo** scheme. It has not been type-checked against the forthcoming SDK or tested on physical hardware. Apple's [developer hub](https://developer.apple.com/iphone-duo/) currently lists Xcode 27.1 beta as coming later this month. The regular scheme does **not** claim to detect a hinge.
 
-**This is not a 24/7 background fold counter.** No documented background hinge-event history API was found. The live adapter observes only while the app has an active scene; counts across suspension, lock, termination, or switching apps are not reconstructed. Opening this app on an already-open device does not add a count. Read [the research and capability boundaries](docs/RESEARCH.md) before changing product claims.
+**This is not a 24/7 background hinge counter.** No documented background hinge-event history API was found. The live adapter observes only while the app has an active scene; counts across suspension, lock, termination, or switching apps are not reconstructed. Opening this app on an already-open device does not add a count. Read [the research and capability boundaries](docs/RESEARCH.md) before changing product claims.
 
 ## Included
 
 - Today, all-time recorded totals, and daily average; observed and manual counts kept separate.
 - Seven-, 30-, and 90-day history charts and accessible daily breakdowns.
 - Adaptive compact/regular layouts, native navigation, dark mode, Dynamic Type, and Reduce Motion support. The Duo scheme adopts the announced system arrangement container.
-- A one-leader, multiwindow-safe fold state machine with wide angle hysteresis, duplicate rejection, and lifecycle invalidation.
+- A one-leader, multiwindow-safe hinge state machine with wide angle hysteresis, duplicate rejection, and lifecycle invalidation.
 - Local atomic JSON persistence; corrupted files are not silently replaced. Failed writes pause counting and preserve one pending change for retry.
 - CSV export, versioned JSON backup/restore with validation and replacement confirmation, and explicit erase confirmation.
 - Small/medium Home Screen and rectangular Lock Screen widgets. Widgets display snapshots, not live sensor monitoring.
@@ -23,13 +23,13 @@ A native, offline SwiftUI opening counter inspired by [Fold Counter for Foldable
 On a Mac with Xcode, an iOS 18+ SDK, Swift 6, and Python 3:
 
 ```sh
-git clone https://github.com/seichris/iphone-duo-fold-counter.git
-cd iphone-duo-fold-counter
+git clone https://github.com/seichris/iphone-duo-hinge-counter.git
+cd iphone-duo-hinge-counter
 python3 scripts/generate_project.py
 open FoldCounter.xcodeproj
 ```
 
-Select **FoldCounter**, choose an iPhone simulator, and Run. Manual entries and the unsaved demo work without foldable hardware. The project and opaque 1024px icon are generated using Python's standard library; no XcodeGen, CocoaPods, or external Swift packages are needed.
+Select **FoldCounter**, choose an iPhone simulator, and Run. Manual entries and the unsaved demo work without foldable hardware. The project is generated using Python's standard library and the supplied opaque 1024px App Store icon is checked in; no XcodeGen, CocoaPods, or external Swift packages are needed.
 
 For a physical device, select your signing team for the app and widget targets. Register/use a matching App Group; the project-level `APP_GROUP_IDENTIFIER` defaults to `group.com.seichris.foldcounter`. Change the bundle identifiers and App Group together when using a different developer account. The counter stores its authoritative data in the app sandbox and remains functional if widget sharing is unavailable.
 
