@@ -10,7 +10,7 @@ final class FoldCounterScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
         for _ in 0..<3 {
             app.buttons["addManual"].tap()
-            app.buttons["confirmManual"].tap()
+            app.buttons["confirmManual"].firstMatch.tap()
         }
         XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "3")
         capture(app, "01-today-manual-entries")

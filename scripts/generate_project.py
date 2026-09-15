@@ -7,9 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import math
 import struct
-import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "FoldCounter.xcodeproj"
@@ -145,36 +143,22 @@ def scheme(name: str, configuration: str, release: str) -> None:
     output.write_text(contents)
 
 
-def generate_icon() -> None:
-    """Original two-panel icon, rendered as an opaque PNG using the standard library."""
-    size = 1024
-    background = (20, 27, 30)
-    raw = bytearray()
-    for y in range(size):
-        raw.append(0)  # PNG scanline filter: none
-        for x in range(size):
-            color = background
-            for left, foreground in ((228, (107, 231, 198)), (532, (205, 247, 235))):
-                if left - 1 <= x <= left + 265 and 251 <= y <= 773:
-                    qx = abs(x - left - 132) - 88
-                    qy = abs(y - 512) - 216
-                    distance = math.hypot(max(qx, 0), max(qy, 0)) + min(max(qx, qy), 0) - 44
-                    coverage = max(0, min(1, 0.5 - distance))
-                    color = tuple(round(a * (1 - coverage) + b * coverage)
-                                  for a, b in zip(background, foreground))
-                    break
-            raw.extend(color)
-    def chunk(kind: bytes, data: bytes) -> bytes:
-        return (struct.pack(">I", len(data)) + kind + data
-                + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff))
-    png = (b"\x89PNG\r\n\x1a\n"
-           + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0))
-           + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
-    (ROOT / "Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png").write_bytes(png)
+def validate_icon() -> None:
+    """Require the checked-in 1024px App Store icon; never replace supplied artwork."""
+    path = ROOT / "Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+    try:
+        data = path.read_bytes()
+    except OSError as error:
+        raise SystemExit(f"Missing checked-in App Store icon: {path}") from error
+    if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+        raise SystemExit(f"App Store icon is not a PNG: {path}")
+    width, height = struct.unpack(">II", data[16:24])
+    if (width, height) != (1024, 1024):
+        raise SystemExit(f"App Store icon must be 1024x1024, got {width}x{height}: {path}")
 
 
 def main() -> None:
-    generate_icon()
+    validate_icon()
     release = json.loads((ROOT / "appstore/release.json").read_text())
     core = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Sources/FoldCounterCore").glob("*.swift"))
     app = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "App").glob("*.swift"))

@@ -108,10 +108,10 @@ def check_urls(metadata: dict) -> list[str]:
     errors = []
     for field in ("marketing_url", "privacy_url", "support_url"):
         try:
-            request = urllib.request.Request(metadata[field], headers={"User-Agent": "FoldCounter-Release-Preflight/1.0"})
+            request = urllib.request.Request(metadata[field], headers={"User-Agent": "HingeCounter-Release-Preflight/1.0"})
             with urllib.request.urlopen(request, timeout=20) as response:
                 text = response.read(1_000_000).decode("utf-8")
-                if response.status != 200 or "Fold Counter" not in text:
+                if response.status != 200 or "Hinge Counter" not in text:
                     errors.append(f"Unexpected public page: {field}")
                 marker = {"privacy_url": "Your counter stays on your device",
                           "support_url": "Why does the count miss openings?"}.get(field)

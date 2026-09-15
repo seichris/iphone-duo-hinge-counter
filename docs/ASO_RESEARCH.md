@@ -4,13 +4,13 @@ Research date: **September 14, 2026**. Scope: English-language launch, primarily
 
 ## Decision
 
-Position this as a **private record of observed openings**, not a hardware odometer. Lead with the descriptive search phrase **fold counter**, use **unfold** as a complementary keyword, and show history/widgets as the supporting value. Do not compete on a 24/7 claim the product cannot deliver. Candidate metadata lives in [`appstore/metadata/en-US.json`](../appstore/metadata/en-US.json); it is a proposal, not a reserved App Store name or trademark clearance.
+Position this as a **private record of observed openings**, not a hardware odometer. Lead with the descriptive product phrase **hinge counter**, use **fold counter** and **unfold** as complementary search terms, and show history/widgets as the supporting value. Do not compete on a 24/7 claim the product cannot deliver. Candidate metadata lives in [`appstore/metadata/en-US.json`](../appstore/metadata/en-US.json); it is a proposal, not a reserved App Store name or trademark clearance.
 
 | Field | Candidate | Characters / limit |
 |---|---|---:|
-| Name | Fold Counter: Opening Tracker | 29 / 30 |
+| Name | Hinge Counter: Opening Tracker | 30 / 30 |
 | Subtitle | Daily Stats & Widgets | 21 / 30 |
-| Keywords | unfold,foldable,hinge,tally,usage,history,offline,private,chart,backup,export,screen,log | 88 / 100 |
+| Keywords | unfold,foldable,opens,tally,usage,history,offline,private,chart,backup,export,screen,log | 88 / 100 |
 
 The promotional text and opening description should sell clarity, while the first visible description section explains foreground-only coverage. The app, public website, screenshots and review notes must tell the same story.
 
@@ -42,7 +42,7 @@ Store descriptions are publishers' claims; features were not tested on those dev
 
 | Priority | Query / cluster | Intent | Evidence basis | Placement / decision |
 |---|---|---|---|---|
-| P1 | fold counter | Find a phone-opening utility | C1, C3, C5 | Name; landing-page subject |
+| P1 | hinge counter | Find a hinge-opening utility | Our product wording; query hypothesis | Name; landing-page subject |
 | P1 | unfold counter | Count device openings | C2 | Keyword `unfold` + title `counter` |
 | P1 | fold counter for iPhone Duo | Device-specific utility | Hardware + C1; query hypothesis | Web title/H1 and compatibility prose |
 | P1 | iPhone Duo opening counter | Device-specific recording | Hardware; query hypothesis | Landing page body, not hidden trademark stuffing |

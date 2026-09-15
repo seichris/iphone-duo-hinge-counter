@@ -17,6 +17,6 @@ The repository includes macOS CI to perform regular-scheme build/UI validation a
 
 ## Prior hosted validation and release-preparation checks
 
-The prior main-branch run [34811598870](https://github.com/seichris/iphone-duo-fold-counter/actions/runs/34811598870) completed successfully, including the standard app/widget build and two UI tests. Its selected SDK was 18.5; the conditional Duo branch did not establish a successful Duo build. This is baseline evidence, not validation of the later release-preparation PR.
+The prior main-branch run [34811598870](https://github.com/seichris/iphone-duo-hinge-counter/actions/runs/34811598870) completed successfully, including the standard app/widget build and two UI tests. Its selected SDK was 18.5; the conditional Duo branch did not establish a successful Duo build. This is baseline evidence, not validation of the later release-preparation PR.
 
 For the preparation changes, local validation executes 18 Python release-pack tests, the existing 33 Swift core tests, project/resource generation, shell syntax checks and Debug Swift syntax parsing. macOS/Xcode UI and build results for those changes must be read from that PR's own workflow, not inferred from the baseline. No signed archive, physical-device test, live website deployment or App Store submission is claimed.

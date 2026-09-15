@@ -1,6 +1,6 @@
 REVIEW-NOTE DRAFT — do not paste until the Duo SDK and hardware release gates pass.
 
-Fold Counter is an independent offline utility for recording openings on a supported foldable device. It offers daily/all-time recorded totals, local history charts, manual entry, CSV export, JSON backup/restore and widget snapshots. There is no login or account and no in-app purchase flow.
+Hinge Counter is an independent offline utility for recording openings on a supported foldable device. It offers daily/all-time recorded totals, local history charts, manual entry, CSV export, JSON backup/restore and widget snapshots. There is no login or account and no in-app purchase flow.
 
 Automatic observation is foreground-only. It does not keep running while locked, suspended, terminated or while another app is active; it does not reconstruct missed openings. Opening the app on an already-open device does not add a count. Widgets do not monitor sensors. The app does not measure hinge health or remaining hardware life.
 
