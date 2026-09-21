@@ -2,7 +2,7 @@
 
 A native, offline SwiftUI hinge-opening counter. The app uses the supplied Duo Counter logo; no Android code or assets are copied.
 
-**Status — September 21, 2026:** Hinge Counter, history, backup tools, demo, and the WidgetKit extension are implemented. The released iOS 27.1 SDK is validated behind the **FoldCounter Duo** scheme: the hinge and arrangement declarations type-check, the Duo simulator build succeeds, and the Duo UI suite passes. Physical hinge callbacks, angle endpoints, display handoff, Device Hub behavior, and signed distribution remain hardware/release gates. The regular scheme does **not** claim to detect a hinge.
+**Status — September 21, 2026:** Hinge Counter, history, backup tools, demo, and the WidgetKit extension are implemented. The **FoldCounter Duo** scheme keeps the explicit `DUO_HINGE_API` gate and installs Apple's public `UIHingeInteraction` through a runtime bridge, so the distribution archive builds with stable Xcode 26.6 while iOS 27.1 supplies live hinge updates. Physical hinge callbacks, angle endpoints, display handoff, Device Hub behavior, and signed distribution remain hardware/release gates. The regular scheme does **not** claim to detect a hinge.
 
 **This is not a 24/7 background hinge counter.** No documented background hinge-event history API was found. The live adapter observes only while the app has an active scene; counts across suspension, lock, termination, or switching apps are not reconstructed. Opening this app on an already-open device does not add a count. Read [the research and capability boundaries](docs/RESEARCH.md) before changing product claims.
 
@@ -10,7 +10,7 @@ A native, offline SwiftUI hinge-opening counter. The app uses the supplied Duo C
 
 - Today, all-time recorded totals, and daily average; observed and manual counts kept separate.
 - Seven-, 30-, and 90-day history charts and accessible daily breakdowns.
-- Adaptive compact/regular layouts, native navigation, dark mode, Dynamic Type, and Reduce Motion support. The Duo scheme adopts the announced system arrangement container.
+- Adaptive compact/regular layouts, native navigation, dark mode, Dynamic Type, and Reduce Motion support. The same size-class layout keeps both panels reachable on Duo and ordinary iPhones.
 - A one-leader, multiwindow-safe hinge state machine with wide angle hysteresis, duplicate rejection, and lifecycle invalidation.
 - Local atomic JSON persistence; corrupted files are not silently replaced. Failed writes pause counting and preserve one pending change for retry.
 - CSV export, versioned JSON backup/restore with validation and replacement confirmation, and explicit erase confirmation.
@@ -35,7 +35,7 @@ For a physical device, select your signing team for the app and widget targets. 
 
 ### The Duo scheme
 
-With Xcode 27.1 and an iOS 27.1 runtime, select **FoldCounter Duo** and a compatible simulator or device. This enables `DUO_HINGE_API`, including `onHingeChange` and `ArrangementView`. `python3 scripts/select_xcode.py --duo` performs the declaration probe used by CI. The local simulator build and UI suite validate compilation, navigation, persistence, adaptive layout reachability, and demo isolation; they do not establish physical hinge callbacks, angle convention, or inner/outer display handoff. See [release gates](docs/TESTING.md).
+For the signed distribution candidate, use stable Xcode 26.6 and select **FoldCounter Duo**. This enables `DUO_HINGE_API` and the runtime `UIHingeInteraction` bridge. To exercise the live runtime, run that build on the iOS 27.1 Duo simulator with Xcode 27.1. `python3 scripts/select_xcode.py --duo` remains a declaration probe for the installed beta SDK; it is not a distribution-archive requirement. Simulator runs validate navigation, persistence, adaptive layout reachability, and demo isolation; they do not establish physical hinge callbacks, angle convention, or inner/outer display handoff. See [release gates](docs/TESTING.md).
 
 Our initial policy is an observed angle of at most 10°, then at least 170°, separated by at least 0.35 seconds. These are app thresholds, not Apple sensor specifications. The adapter's assumption of 0° closed / 180° flat still needs verification against the SDK and hardware. No durability rating or device-lifetime count is assumed.
 
