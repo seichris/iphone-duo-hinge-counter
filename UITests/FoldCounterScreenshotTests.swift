@@ -44,13 +44,12 @@ final class FoldCounterScreenshotTests: XCTestCase {
     }
 
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
-        let tabBarButton = app.tabBars.buttons[label]
-        if tabBarButton.waitForExistence(timeout: 2) {
-            tabBarButton.tap()
+        let navigationButtons = app.buttons.matching(NSPredicate(format: "label == %@", label))
+        let firstNavigationButton = navigationButtons.element(boundBy: 0)
+        if firstNavigationButton.waitForExistence(timeout: 2) {
+            firstNavigationButton.tap()
             return
         }
-        let adaptiveButton = app.buttons[label]
-        XCTAssertTrue(adaptiveButton.waitForExistence(timeout: 5), "Required navigation item must remain reachable")
-        adaptiveButton.tap()
+        XCTFail("Required navigation item must remain reachable")
     }
 }
