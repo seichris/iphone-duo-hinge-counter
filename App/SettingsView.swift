@@ -74,8 +74,8 @@ struct SettingsView: View {
                      + "The daily average includes every calendar day since tracking began, including zero days and today. "
                      + "All-time means recorded by this app, not lifetime hardware usage.")
                 #if DEBUG
-                Text("iPhone Duo integration: announced API, pending SDK and hardware validation. "
-                     + "The standard build supports manual counting and demo mode. The Duo scheme enables the new API.")
+                Text("iPhone Duo integration: enabled in the Duo build and validated on the iPhone Duo simulator. "
+                     + "The standard build supports manual counting and demo mode.")
                 #endif
                 Text("Independent app. Not affiliated with or endorsed by Apple. No hinge durability rating is assumed.")
                     .font(.footnote).foregroundStyle(.secondary)
