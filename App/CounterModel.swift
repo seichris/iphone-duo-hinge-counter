@@ -11,6 +11,8 @@ final class CounterModel {
     private(set) var angle: Double?
     private(set) var hingeDetected: Bool?
     private(set) var foreground = false
+    private(set) var observationID: UUID?
+    private(set) var sensorLeader: UUID?
     private(set) var pendingSave = false
     private(set) var isUITesting = false
 
@@ -67,19 +69,20 @@ final class CounterModel {
             angle = nil
             hingeDetected = nil
         }
+        updateObservation()
     }
 
-    func receive(degrees: Double?, scene: UUID) {
-        guard session.leader == scene else { return }
+    func subscription(for scene: UUID) -> UUID? {
+        sensorLeader == scene ? observationID : nil
+    }
+
+    func receive(degrees: Double?, scene: UUID, observationID: UUID) {
+        guard session.subscription(for: scene) == observationID else { return }
         hingeDetected = degrees != nil
         angle = degrees.flatMap { $0.isFinite && (0...180).contains($0) ? $0 : nil }
-        guard canEdit, archive?.automaticTrackingEnabled == true else {
-            session.invalidate()
-            return
-        }
         let duration = origin.duration(to: clock.now).components
         let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
-        if session.observe(degrees: degrees, timestamp: seconds, scene: scene) {
+        if session.observe(degrees: degrees, timestamp: seconds, scene: scene, observationID: observationID) {
             record(.hinge)
         }
     }
@@ -119,6 +122,7 @@ final class CounterModel {
     }
 
     private func reload() {
+        defer { updateObservation() }
         do {
             let loaded = try file.load(orCreate: CounterArchive())
             archive = loaded
@@ -133,6 +137,7 @@ final class CounterModel {
     /// Write before publishing. On failure retain exactly one pending transaction for retry;
     /// stop accepting samples so an error cannot silently become a lost or duplicate count.
     private func persist(_ candidate: CounterArchive) {
+        defer { updateObservation() }
         do {
             try file.save(candidate)
             archive = candidate
@@ -145,6 +150,16 @@ final class CounterModel {
             pendingSave = true
             storageError = "The change is not saved yet. Counting is paused. " + error.localizedDescription
             session.invalidate()
+        }
+    }
+
+    private func updateObservation() {
+        session.setEnabled(canEdit && archive?.automaticTrackingEnabled == true)
+        sensorLeader = session.isEnabled ? session.leader : nil
+        observationID = sensorLeader.map { _ in session.observationID }
+        if observationID == nil {
+            angle = nil
+            hingeDetected = nil
         }
     }
 

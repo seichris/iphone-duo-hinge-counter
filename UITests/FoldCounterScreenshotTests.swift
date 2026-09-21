@@ -14,16 +14,23 @@ final class FoldCounterScreenshotTests: XCTestCase {
         }
         XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "3")
         capture(app, "01-today-manual-entries")
-        app.tabBars.buttons["History"].tap()
+        openTab("History", in: app)
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Daily breakdown")).firstMatch.waitForExistence(timeout: 5))
         capture(app, "02-history")
-        app.tabBars.buttons["Settings"].tap()
+        openTab("Settings", in: app)
         XCTAssertTrue(app.buttons["privacyPolicy"].waitForExistence(timeout: 5))
         capture(app, "03-settings")
         app.buttons["privacyPolicy"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Your counter stays on your device")).firstMatch.waitForExistence(timeout: 5))
         capture(app, "04-privacy")
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        // Restarting the isolated UI-test process avoids relying on a private
+        // navigation-bar element type that iOS 27.1's Duo runtime exposes as
+        // `Other` instead of `Button`.
+        app.terminate()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
+        openTab("Settings", in: app)
         app.buttons["helpSupport"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Why does the count miss openings?")).firstMatch.waitForExistence(timeout: 5))
         capture(app, "05-support")
@@ -34,5 +41,16 @@ final class FoldCounterScreenshotTests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
+        let tabBarButton = app.tabBars.buttons[label]
+        if tabBarButton.waitForExistence(timeout: 2) {
+            tabBarButton.tap()
+            return
+        }
+        let adaptiveButton = app.buttons[label]
+        XCTAssertTrue(adaptiveButton.waitForExistence(timeout: 5), "Required navigation item must remain reachable")
+        adaptiveButton.tap()
     }
 }

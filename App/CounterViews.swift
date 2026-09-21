@@ -21,6 +21,7 @@ struct CounterRootView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .modifier(DuoHingeObserver(scene: sceneID))
+        .onAppear { model.setScene(sceneID, active: scenePhase == .active) }
         .onChange(of: scenePhase, initial: true) { _, phase in
             model.setScene(sceneID, active: phase == .active)
         }
@@ -56,18 +57,20 @@ struct DashboardView: View {
                         Text("Since \(archive.startedOn) · Includes manual entries")
                             .font(.caption).foregroundStyle(.secondary)
                         if let error = model.storageError { StorageWarning(message: error) }
-                    }
-                } secondary: {
-                    VStack(alignment: .leading, spacing: 20) {
+                        // A split arrangement may show only its primary content.
+                        // Keep the coverage disclosure and actions reachable there.
                         TrackingCard()
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Your last 7 days").font(.headline)
-                            HistoryChart(archive: archive, now: context.date, days: 7)
-                        }.counterCard()
                         Button { showDemo = true } label: {
                             Label("Try an unsaved demo", systemImage: "play.circle")
                                 .frame(maxWidth: .infinity, minHeight: 32)
                         }.buttonStyle(.bordered).accessibilityIdentifier("openDemo")
+                    }
+                } secondary: {
+                    VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Your last 7 days").font(.headline)
+                            HistoryChart(archive: archive, now: context.date, days: 7)
+                        }.counterCard()
                     }
                 }
             } else {
@@ -137,6 +140,7 @@ struct TrackingCard: View {
             Label(model.trackingTitle, systemImage: model.hingeDetected == true ? "waveform.path" : "info.circle")
                 .font(.headline)
             Text(model.trackingDetail).font(.subheadline).foregroundStyle(.secondary)
+                .accessibilityIdentifier("trackingDisclosure")
             Text("Not a device-lifetime or hinge-health measurement.")
                 .font(.caption).foregroundStyle(.secondary)
         }.frame(maxWidth: .infinity, alignment: .leading).counterCard()

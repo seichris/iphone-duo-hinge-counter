@@ -109,10 +109,10 @@ func invalidAnglesBreakContinuity(angle: Double) {
     let a = UUID(), b = UUID()
     s.setActive(true, scene: a)
     s.setActive(true, scene: b)
-    _ = s.observe(degrees: 0, timestamp: 0, scene: a)
-    _ = s.observe(degrees: 0, timestamp: 0.1, scene: b)
-    #expect({ s.observe(degrees: 180, timestamp: 1, scene: a) }())
-    #expect({ !s.observe(degrees: 180, timestamp: 1.1, scene: b) }())
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: s.observationID)
+    _ = s.observe(degrees: 0, timestamp: 0.1, scene: b, observationID: s.observationID)
+    #expect({ s.observe(degrees: 180, timestamp: 1, scene: a, observationID: s.observationID) }())
+    #expect({ !s.observe(degrees: 180, timestamp: 1.1, scene: b, observationID: s.observationID) }())
 }
 
 @Test func losingOneSceneDoesNotSuspendAnother() {
@@ -122,8 +122,8 @@ func invalidAnglesBreakContinuity(angle: Double) {
     s.setActive(true, scene: b)
     s.setActive(false, scene: b)
     #expect(s.leader == a)
-    _ = s.observe(degrees: 0, timestamp: 0, scene: a)
-    #expect({ s.observe(degrees: 180, timestamp: 1, scene: a) }())
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: s.observationID)
+    #expect({ s.observe(degrees: 180, timestamp: 1, scene: a, observationID: s.observationID) }())
 }
 
 @Test func leaderHandoffResetsObservation() {
@@ -131,21 +131,110 @@ func invalidAnglesBreakContinuity(angle: Double) {
     let a = UUID(), b = UUID()
     s.setActive(true, scene: a)
     s.setActive(true, scene: b)
-    _ = s.observe(degrees: 0, timestamp: 0, scene: a)
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: s.observationID)
     s.setActive(false, scene: a)
     #expect(s.leader == b)
-    #expect({ !s.observe(degrees: 180, timestamp: 1, scene: b) }())
+    #expect({ !s.observe(degrees: 180, timestamp: 1, scene: b, observationID: s.observationID) }())
 }
 
 @Test func backgroundAndRelaunchDoNotInventFolds() {
     var s = FoldObservationSession()
     let a = UUID()
     s.setActive(true, scene: a)
-    _ = s.observe(degrees: 0, timestamp: 0, scene: a)
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: s.observationID)
     s.setActive(false, scene: a)
-    #expect({ !s.observe(degrees: 180, timestamp: 1, scene: a) }())
+    #expect({ !s.observe(degrees: 180, timestamp: 1, scene: a, observationID: s.observationID) }())
     s.setActive(true, scene: a)
-    #expect({ !s.observe(degrees: 180, timestamp: 2, scene: a) }())
+    #expect({ !s.observe(degrees: 180, timestamp: 2, scene: a, observationID: s.observationID) }())
+}
+
+@Test func onlyLeaderHasEnabledSubscription() {
+    var s = FoldObservationSession()
+    let a = UUID(), b = UUID()
+    #expect(s.subscription(for: a) == nil)
+    s.setActive(true, scene: a)
+    s.setActive(true, scene: b)
+    #expect(s.subscription(for: a) != nil)
+    #expect(s.subscription(for: b) == nil)
+    s.setEnabled(false)
+    #expect(s.subscription(for: a) == nil)
+    #expect(s.subscription(for: b) == nil)
+}
+
+@Test func pauseWithoutCallbacksInvalidatesClosedPose() {
+    var s = FoldObservationSession()
+    let a = UUID()
+    s.setActive(true, scene: a)
+    let oldID = s.observationID
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: oldID)
+    s.setEnabled(false)
+    #expect({ !s.observe(degrees: 180, timestamp: 1, scene: a, observationID: oldID) }())
+    s.setEnabled(true)
+    #expect(s.observationID != oldID)
+    #expect({ !s.observe(degrees: 180, timestamp: 2, scene: a, observationID: s.observationID) }())
+    // A delayed old callback cannot arm the new subscription after resuming.
+    _ = s.observe(degrees: 0, timestamp: 3, scene: a, observationID: oldID)
+    #expect({ !s.observe(degrees: 180, timestamp: 4, scene: a, observationID: s.observationID) }())
+    _ = s.observe(degrees: 0, timestamp: 5, scene: a, observationID: s.observationID)
+    #expect({ s.observe(degrees: 180, timestamp: 6, scene: a, observationID: s.observationID) }())
+}
+
+@Test func handoffBackToSameSceneRejectsOldSubscription() {
+    var s = FoldObservationSession()
+    let a = UUID(), b = UUID()
+    s.setActive(true, scene: a)
+    let oldID = s.observationID
+    s.setActive(true, scene: b)
+    s.setActive(false, scene: a)
+    s.setActive(true, scene: a)
+    s.setActive(false, scene: b)
+    #expect(s.leader == a)
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: oldID)
+    #expect({ !s.observe(degrees: 180, timestamp: 1, scene: a, observationID: s.observationID) }())
+}
+
+@Test func repeatedActivationAndFollowerRemovalPreserveSubscription() {
+    var s = FoldObservationSession()
+    let a = UUID(), b = UUID()
+    s.setActive(true, scene: a)
+    let id = s.observationID
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: id)
+    s.setActive(true, scene: a)
+    s.setActive(true, scene: b)
+    s.setActive(false, scene: b)
+    s.setEnabled(true)
+    #expect(s.observationID == id)
+    #expect({ s.observe(degrees: 180, timestamp: 1, scene: a, observationID: id) }())
+}
+
+@Test func invalidationRejectsCallbacksAfterStorageOrRestoreBoundary() {
+    var s = FoldObservationSession()
+    let a = UUID()
+    s.setActive(true, scene: a)
+    let oldID = s.observationID
+    _ = s.observe(degrees: 0, timestamp: 0, scene: a, observationID: oldID)
+    s.invalidate()
+    _ = s.observe(degrees: 0, timestamp: 1, scene: a, observationID: oldID)
+    #expect({ !s.observe(degrees: 180, timestamp: 2, scene: a, observationID: s.observationID) }())
+}
+
+@Test func hundredContinuousSyntheticCyclesCountExactlyOnceEach() {
+    var s = FoldObservationSession()
+    let a = UUID(), b = UUID()
+    s.setActive(true, scene: a)
+    s.setActive(true, scene: b)
+    var count = 0
+    for cycle in 0..<100 {
+        for (offset, angle) in [0.0, 5, 90, 175, 180, 169, 171].enumerated() {
+            let time = Double(cycle * 10 + offset)
+            for scene in [a, b] {
+                if s.observe(degrees: angle, timestamp: time, scene: scene, observationID: s.observationID) {
+                    count += 1
+                }
+            }
+        }
+    }
+    #expect(count == 100)
 }
 
 @Test func manualAndAutomaticAreSeparated() throws {
