@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import struct
 
@@ -13,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "FoldCounter.xcodeproj"
 CONFIGS = ("Debug", "Release", "Duo Debug", "Duo Release")
 objects: dict[str, dict] = {}
+APP_STORE_PROFILE = os.environ.get("APP_STORE_PROFILE_SPECIFIER")
+WIDGET_APP_STORE_PROFILE = os.environ.get("WIDGET_APP_STORE_PROFILE_SPECIFIER")
 
 
 def ident(name: str) -> str:
@@ -61,6 +64,17 @@ def configuration_list(owner: str, settings: dict, project=False) -> str:
         debug = config.endswith("Debug")
         flags = (["DEBUG"] if debug else []) + (["DUO_HINGE_API"] if config.startswith("Duo") else [])
         values = dict(settings)
+        if config == "Duo Release":
+            profile = {
+                "FoldCounter": APP_STORE_PROFILE,
+                "FoldCounterWidget": WIDGET_APP_STORE_PROFILE,
+            }.get(owner)
+            if profile:
+                values.update({
+                    "CODE_SIGN_STYLE": "Manual",
+                    "CODE_SIGN_IDENTITY": "Apple Distribution",
+                    "PROVISIONING_PROFILE_SPECIFIER": profile,
+                })
         values.update({"SWIFT_OPTIMIZATION_LEVEL": "-Onone" if debug else "-O",
                        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "$(inherited) " + " ".join(flags),
                        "DEBUG_INFORMATION_FORMAT": "dwarf" if debug else "dwarf-with-dsym"})

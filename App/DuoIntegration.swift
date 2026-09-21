@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// Announced in Apple Tech Talk 111464 (0:49–2:35), researched 2026-09-14.
-/// Keep behind an explicit SDK flag: Apple's hub says Xcode 27.1 is coming later
-/// this month. The normal scheme must compile without pretending to read a hinge.
-/// SDK symbol type-checking and physical-device validation remain a release gate.
+/// Matches Apple's iOS 27.1 reference, checked 2026-09-20. The SDK build,
+/// angle endpoints and runtime behavior remain explicit gates (docs/VALIDATION.md).
 struct DuoHingeObserver: ViewModifier {
     @Environment(CounterModel.self) private var model
     let scene: UUID
@@ -11,10 +9,13 @@ struct DuoHingeObserver: ViewModifier {
     @ViewBuilder func body(content: Content) -> some View {
         #if DUO_HINGE_API
         if #available(iOS 27.1, *) {
-            content.onHingeChange { _, context in
+            let observationID = model.subscription(for: scene)
+            content.onHingeChange(isEnabled: observationID != nil) { _, context in
+                guard let observationID else { return }
                 // Deliberately do not replay the previous context on resume.
                 // The talk identifies hinge.angle as SwiftUI.Angle.
-                model.receive(degrees: context.hinge?.angle.degrees, scene: scene)
+                model.receive(degrees: context.hinge?.angle.degrees, scene: scene,
+                              observationID: observationID)
             }
         } else {
             content

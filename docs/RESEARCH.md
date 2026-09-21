@@ -1,18 +1,18 @@
 # iPhone Duo feasibility research
 
-Checked September 14, 2026. Primary sources only for platform/API decisions.
+Checked September 21, 2026. Primary sources only for platform/API decisions.
 
 ## Platform and toolchain
 
-Apple has a dedicated [iPhone Duo developer hub](https://developer.apple.com/iphone-duo/). Its tools section explicitly labels **Xcode 27.1 beta** as **coming later this month**. This is why the repo has a working compatibility scheme and a separately gated new-SDK scheme instead of unconditionally referencing SDK symbols that cannot yet be validated here.
+Apple has a dedicated [iPhone Duo developer hub](https://developer.apple.com/iphone-duo/). The local toolchain now includes Xcode 27.1 (27A9269) with the iOS 27.1 SDK and simulator runtime 24A94401. Xcode 26.6 (17F113) with iOS 26.5 remains the regular compatibility toolchain. `scripts/select_xcode.py --duo` compiles a small Swift surface probe instead of relying on a version number alone.
 
-The [Prepare your app talk](https://developer.apple.com/videos/play/tech-talks/111461/) describes Xcode 27.1/Device Hub testing, scene-relative geometry, asymmetric safe areas, resizing, and size classes. The talk's instruction to use/download 27.1 does not override the hub's explicit availability notice. We could verify the announced APIs through the talks, but did not retrieve complete reference declarations or SDK headers for the hinge types.
+The [Prepare your app talk](https://developer.apple.com/videos/play/tech-talks/111461/) describes Xcode 27.1/Device Hub testing, scene-relative geometry, asymmetric safe areas, resizing, and size classes. The installed SDK declarations and Apple's [DeviceHinge](https://developer.apple.com/documentation/swiftui/devicehinge), [onHingeChange](https://developer.apple.com/documentation/swiftui/view/onhingechange(isenabled:_:)), and [ArrangementView](https://developer.apple.com/documentation/swiftui/arrangementview) references now match the adapter: `DeviceHinge.angle` is `Angle`, `DeviceHingeContext.hinge` is optional, and the callback receives old/new contexts. The declarations are verified; physical callback behavior is not.
 
 ## What can be detected?
 
 [Leverage multiple displays and scenes on iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111464/), 0:49–2:35, documents SwiftUI `onHingeChange`, UIKit `UIHingeInteraction`, optional `context.hinge`, high-level hinge status, and live angle updates. Its sample identifies `hinge.angle` as `SwiftUI.Angle`. A nil hinge indicates a device without one. The talk also explains multiple app windows on the inner display.
 
-Implementation: one app-wide model elects a single active scene as sensor leader. The adapter forwards the current angle; it never derives a fold from window width, orientation, size class, or screen identity. It does not replay the callback's previous context across activation. Runtime availability is conservatively gated to iOS 27.1; the exact SDK availability annotations must still be checked.
+Implementation: one app-wide model elects a single active scene as sensor leader. The adapter forwards the current angle; it never derives a fold from window width, orientation, size class, or screen identity. Subscription identities reject delayed callbacks after lifecycle, scene-leader, storage, or settings discontinuities. It does not replay the callback's previous context across activation. Runtime availability is gated to iOS 27.1.
 
 **Unverified hardware detail:** the adapter currently assumes 0° means closed and 180° means flat. Those endpoints were not established by the accessible sample. Confirm/normalize them in the adapter before enabling production tracking. The 10°/170°/0.35-second detector policy is our initial design, not Apple's specifications.
 

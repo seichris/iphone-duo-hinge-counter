@@ -23,10 +23,10 @@ def render_pages(root: Path) -> dict[str, str]:
 </head><body><a class="skip" href="#main">Skip to content</a><header><a href="./">Hinge Counter</a><nav aria-label="Main"><a href="support.html">Support</a><a href="privacy.html">Privacy</a></nav></header>
 <main id="main">{body}</main><footer><p>Independent software. Not affiliated with or endorsed by Apple. iPhone is a trademark of Apple Inc.</p><p><a href="https://github.com/seichris/iphone-duo-hinge-counter">Source and project status</a> · <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub hosting privacy</a></p></footer></body></html>\n'''
     pages = {"styles.css": CSS + "\n", ".nojekyll": ""}
-    body = '''<p class="status">In preparation · not available on the App Store yet</p>
+    body = '''<p class="status">Available for review · release is manually controlled</p>
 <h1>Hinge Counter<br>for iPhone Duo</h1><p class="lead">A clear record of the openings you observe.</p>
 <p>See recorded daily totals, history charts and saved widget counts. Keep manual entries separate from sensor observations. No account, ads or analytics.</p>
-<p class="notice"><strong>Foreground-only, not 24/7.</strong> Automatic counting requires supported hardware and a complete close-to-open movement observed while this app is active. Missed openings are not recovered. Duo SDK and physical-device validation are still pending.</p>
+<p class="notice"><strong>Foreground-only, not 24/7.</strong> Automatic counting requires supported hardware and a complete close-to-open movement observed while this app is active. Missed openings are not recovered. The Duo SDK path is validated on the iPhone Duo simulator.</p>
 <p><a href="https://github.com/seichris/iphone-duo-hinge-counter">Follow development on GitHub</a> · <a href="support.html">How counting works</a></p>
 <section><h2>Understand your recorded openings</h2><p>Today's count, an all-time recorded total and a daily average. Explore 7-, 30- and 90-day history without treating incomplete observations as a device-lifetime total.</p></section>
 <section><h2>Keep your history in your hands</h2><p>Store records locally, export CSV, create a JSON backup and restore or erase your history. Home Screen and Lock Screen widgets show saved snapshots; they do not monitor the hinge.</p></section>

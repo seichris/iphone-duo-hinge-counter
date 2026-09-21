@@ -4,7 +4,7 @@
 
 `swift test` runs the real Swift detector, scene coordinator, statistics, serialization, and file persistence. The app and widget compile these same core source files; there is no second implementation. `python3 scripts/check_project.py` checks the generated project graph, resources, schemes, entitlements, and privacy manifest. Neither command replaces an iOS build.
 
-The macOS workflow builds the regular app/widget, runs UI smoke tests, and attempts the Duo scheme only if the selected SDK version is at least 27.1. An explicit CI notice records when that SDK check is skipped. Test artifacts are retained for inspection. A compatibility-scheme pass never proves the new SDK adapter compiles.
+The macOS workflow builds the regular app/widget, runs UI smoke tests, and probes installed SDK declarations with `scripts/select_xcode.py --duo --optional`. When the probe succeeds, CI compiles **FoldCounter Duo** for both a simulator and a generic iOS device; otherwise an explicit notice records that the Duo branch was skipped. Test artifacts are retained for inspection. A compatibility-scheme pass never proves the new SDK adapter compiles.
 
 ## Required before claiming real Duo support
 
