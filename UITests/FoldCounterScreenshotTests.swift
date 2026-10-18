@@ -53,6 +53,16 @@ final class FoldCounterScreenshotTests: XCTestCase {
     }
 
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
+        let sidebarItem = app.cells[label]
+        if sidebarItem.waitForExistence(timeout: 2) {
+            sidebarItem.tap()
+            return
+        }
+        let adaptiveTab = app.tabs[label]
+        if adaptiveTab.waitForExistence(timeout: 2) {
+            adaptiveTab.tap()
+            return
+        }
         let tabBarButton = app.tabBars.buttons[label]
         if tabBarButton.waitForExistence(timeout: 2) {
             tabBarButton.tap()
