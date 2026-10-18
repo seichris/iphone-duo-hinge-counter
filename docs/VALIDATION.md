@@ -18,7 +18,7 @@ Executed toolchain: **Xcode 27.1 RC, build 27A9275**, with **iOS 27.1 device and
 - Draft release preflight and `git diff --check`: **passed**. Draft consistency is not submission approval.
 - Duo Release generic iOS device build, signing disabled: **BUILD SUCCEEDED**, including the widget. Logs: `.release/duo-device-final-build.log`.
 - Duo Debug simulator app and UI test bundles: **compiled successfully** with the 27.1 SDK. A runtime screenshot showed `Live hinge · 0°`, `Observing while active`, zero observed openings and zero manual entries. This demonstrates a simulator callback, not a verified physical endpoint or complete opening cycle.
-- Screenshot capture, accessibility-size coverage/demo isolation, History/Settings navigation and manual persistence/demo isolation ran in the Duo simulator. Final subscription regression results are recorded in the local test logs; do not infer an all-green UI suite from compilation or screenshots.
+- Four existing Duo UI flows passed in the first direct run: screenshot capture, accessibility-size coverage/demo isolation, History/Settings navigation and manual persistence/demo isolation. The new subscription test initially failed due to combined accessibility labels and the labeled row being mistaken for its nested switch. After fixing those test selectors, the focused final regression **passed: 1 test, 0 failures** in 34 seconds (`.release/duo-final-resume-tests.log`). It actually pauses/resumes twice, receives fresh status updates and retains zero counts on an initial pose. These are results across separate runs; the earlier failed suite is not relabeled green.
 
 ## App Store Connect checks
 
@@ -26,7 +26,7 @@ The existing version 1.0.0 remains **REJECTED**, with build **3** attached. The 
 
 Read-only `asc validate` returned **0 errors, 0 warnings**, for the existing attached build, not candidate build 4. Four existing screenshot sets contain five COMPLETE images each: iPhone 6.7, 6.5, 6.1 and iPad 12.9. These are existing assets, not new Duo captures. Brave verification of the current App Privacy page confirmed **Published** and **Data Not Collected**. Marketing, support and privacy URLs returned the expected live content.
 
-The local candidate is **1.0.0 (4)**. Metadata now explicitly requires iOS 27.1 or later for automatic Duo counting. Updated review notes remain a draft until device evidence is supplied. Archive/export logs and any candidate distribution evidence are kept in ignored `.release/`; no upload or submission should be inferred from the source version number.
+The local candidate is **1.0.0 (4)**. Metadata now explicitly requires iOS 27.1 or later for automatic Duo counting. Updated review notes remain a draft until device evidence is supplied. The signed archive and exported IPA **succeeded** using Xcode 27A9275 and iphoneos27.1. App/widget versions, deep signatures, team and App Group entitlements match. The artifact was built from `feb69ab`; subsequent changes only correct the UI test and update this report. A local manifest records build and verification commits separately and verifies that application inputs are unchanged. Archive/export logs and any candidate distribution evidence are kept in ignored `.release/`; no upload or submission should be inferred from the source version number.
 
 ## Remaining release gates
 
