@@ -12,9 +12,13 @@ python3 scripts/generate_project.py
 # Device Hub pose/inner-versus-outer selection must be set by the operator for Duo.
 xcodebuild -project FoldCounter.xcodeproj -scheme "${CAPTURE_SCHEME:-FoldCounter}" \
   -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+  -parallel-testing-enabled NO -collect-test-diagnostics never \
   -resultBundlePath "$OUT/Captures.xcresult" \
   -only-testing:FoldCounterUITests/FoldCounterScreenshotTests \
   CODE_SIGNING_ALLOWED=NO test 2>&1 | tee "$OUT/capture.log"
 xcrun xcresulttool export attachments --path "$OUT/Captures.xcresult" --output-path "$OUT/attachments"
 echo "Actual UI captures: $OUT/attachments. Review before copying selected PNGs to .release/screenshots/$GROUP/."
 echo 'Manual test data is labeled. Widget screenshots and real Duo behavior need separate device validation.'
+echo 'Xcode 27.1 RC may export inner-screen XCTest images at 2006x2852. Reject those; do not resize them.'
+echo 'For native Duo capture, use devicectl device info displays, then device capture screenshot with the active --display-unique-id.'
+echo 'Keep the app in its isolated --ui-testing flow, record device/display/build identity, and visually review every native capture.'

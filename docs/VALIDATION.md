@@ -34,4 +34,16 @@ No physical iPhone Duo was available during the checks recorded above. Physical 
 
 The new SDK test-product automation initially failed to resolve the Duo destination; direct project-based `xcodebuild test` did launch the app. The RC logs `invalidDigitCount` for five-digit runtime build suffixes and duplicate accessibility loader classes. Failed test attempts and incomplete result bundles are retained separately; they are not passing evidence.
 
-Before submission, finish physical qualification, TestFlight/accessibility checks, review real Duo screenshots, validate the signed candidate with Apple, select the processed candidate build, apply the final accurate metadata/review notes and reconcile the unresolved review item. Manual release remains selected. Do not send a reply claiming completed physical validation or submit solely because the metadata validator passes.
+Before submission, finish physical qualification, apply measured metadata/review notes and reconcile the unresolved review item. Manual release remains selected. Do not send a reply claiming completed physical validation or submit solely because the metadata validator passes.
+
+## Build 5 follow-up
+
+Screenshot review exposed a visual defect at a closed pose: the decorative glyph's perspective projection enlarged it outside its fixed layout. Build **1.0.0 (5)** uses orthographic rotation for that artwork; sensor observation and count policy are unchanged. Application source: `e7eeec4`. This replaces build 4 as the candidate for hardware qualification.
+
+Build 5 was archived and exported with **Xcode 27.1 RC (27A9275), iphoneos27.1**. Both distribution signatures, bundle versions and App Group entitlements were checked. Apple processed build `531a4f37-9edd-485e-b6bb-3bb485cd35fe`; it is attached to the draft version. App Store and TestFlight metadata validation each report **zero errors and zero warnings**. This does not submit the version or exercise the distribution app on hardware.
+
+The follow-up reran **39 core tests** and **24 release-script tests**, plus project, site and SDK declaration checks. An initial extra core build failed for lack of disk space; the rerun using the existing scratch directory passed. That failure is preserved, not counted as a test pass. Both hosted CI jobs for `e7eeec4` passed.
+
+The 27.1 RC's XCTest application/screen captures can select inactive display data or round the inner framebuffer to **2006 × 2852**, even while UI assertions pass. These captures were rejected. The inner listing set uses five actual **2853 × 2007** native landscape captures from `devicectl device capture screenshot --display-unique-id`, with the simulator/display identity recorded privately. No screenshot is resized to impersonate a Duo display. Screenshot validation now rejects alpha channels and enforces the shared ten-image maximum for the combined Duo upload set. Full capture selection, final software UI results, remote asset processing and exact candidate hashes are recorded in ignored `.release/resubmission-readiness.md` and its evidence files.
+
+The remaining physical qualification procedure is [HARDWARE-QUALIFICATION.md](HARDWARE-QUALIFICATION.md). It includes the actual TestFlight package, hinge endpoints and counting accuracy, display handoff and continuity, multiple windows, device accessibility and widgets. Local release evidence must keep the two combined hardware/TestFlight gates blocked until those results exist.

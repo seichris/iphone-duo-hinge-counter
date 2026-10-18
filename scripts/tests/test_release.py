@@ -114,7 +114,9 @@ class ReleaseTests(unittest.TestCase):
                 data = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', 1, 1, 8, color, 0, 0, 0))
                 if transparency:
                     data += chunk(b'tRNS', bytes(6))
-                data += chunk(b'IDAT', zlib.compress(bytes(5 if color == 6 else 4))) + chunk(b'IEND', b'')
+                # Even a fully opaque alpha channel is prohibited by Apple.
+                scanline = bytes([0, 0, 0, 0, 255]) if color == 6 else bytes(4)
+                data += chunk(b'IDAT', zlib.compress(scanline)) + chunk(b'IEND', b'')
                 path.write_bytes(data)
                 self.assertEqual(png_has_alpha(path), expected)
             path.write_bytes(data[:-3])
