@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${SIMULATOR_UDID:?Set the UDID of the simulator matching the intended screenshot slot}"
 GROUP="${SCREENSHOT_GROUP:-iphone-6.9}"
-case "$GROUP" in iphone-6.9|ipad-13|duo-inner|duo-outer) ;; *) echo 'Unknown screenshot group' >&2; exit 2;; esac
+case "$GROUP" in iphone-dynamic-island-medium|iphone-6.9|iphone-6.5|ipad-13|duo-inner|duo-outer) ;; *) echo 'Unknown screenshot group' >&2; exit 2;; esac
 OUT=".release/captures/$GROUP"
 if [[ -e "$OUT" ]]; then echo "Capture directory exists: $OUT. Preserve/review it before another run." >&2; exit 2; fi
 mkdir -p "$OUT"

@@ -17,7 +17,7 @@
           2868
         ]
       ],
-      "required": true
+      "required": false
     },
     "ipad-13": {
       "portrait_sizes": [
@@ -49,9 +49,35 @@
         ]
       ],
       "required": true
+    },
+    "iphone-dynamic-island-medium": {
+      "portrait_sizes": [
+        [
+          1179,
+          2556
+        ],
+        [
+          1206,
+          2622
+        ]
+      ],
+      "required": true
+    },
+    "iphone-6.5": {
+      "portrait_sizes": [
+        [
+          1242,
+          2688
+        ],
+        [
+          1284,
+          2778
+        ]
+      ],
+      "required": false
     }
   },
-  "notes": "Apple now accepts Duo outer/inner sizes in one iPhone Duo set (up to 10 images combined), verified in App Store Connect. Starting April 2027, Duo screenshots are required for apps using iOS 27.1 SDK or later. Both Duo displays remain this project's release requirement. iPad is included because TARGETED_DEVICE_FAMILY is 1,2. Landscape uses reversed dimensions. Do not resize ordinary iPhone images to impersonate Duo captures.",
+  "notes": "Apple now accepts Duo outer/inner sizes in one iPhone Duo set (up to 10 images combined), verified in App Store Connect. Starting April 2027, Duo screenshots are required for apps using iOS 27.1 SDK or later. Both Duo displays remain this project's release requirement. iPad is included because TARGETED_DEVICE_FAMILY is 1,2. Landscape uses reversed dimensions. Do not resize ordinary iPhone images to impersonate Duo captures. The current required ordinary iPhone group is Dynamic Island medium; larger and older optional sets are retained only with accurate current captures.",
   "storyboard": [
     {
       "order": 1,
