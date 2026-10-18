@@ -245,9 +245,9 @@ struct FoldGlyph: View {
     var body: some View {
         HStack(spacing: 5) {
             RoundedRectangle(cornerRadius: 10).fill(.mint.gradient)
-                .rotation3DEffect(.degrees((180 - degrees) * 0.35), axis: (x: 0, y: 1, z: 0), anchor: .trailing)
+                .rotation3DEffect(.degrees((180 - degrees) * 0.35), axis: (x: 0, y: 1, z: 0), anchor: .trailing, perspective: 0)
             RoundedRectangle(cornerRadius: 10).fill(.mint.opacity(0.6).gradient)
-                .rotation3DEffect(.degrees(-(180 - degrees) * 0.35), axis: (x: 0, y: 1, z: 0), anchor: .leading)
+                .rotation3DEffect(.degrees(-(180 - degrees) * 0.35), axis: (x: 0, y: 1, z: 0), anchor: .leading, perspective: 0)
         }.animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: degrees)
     }
 }

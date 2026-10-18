@@ -37,10 +37,16 @@ final class FoldCounterScreenshotTests: XCTestCase {
     }
 
     @MainActor private func capture(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        // An application-bounds capture on the 27.1 Duo runtime can select the
+        // inactive framebuffer and round off native pixels. Preserve each
+        // screen capture; the release pack must select the active, nonblank
+        // native-resolution display after visual review, without resizing.
+        for (index, screen) in XCUIScreen.screens.enumerated() {
+            let attachment = XCTAttachment(screenshot: screen.screenshot())
+            attachment.name = "\(name)-screen-\(index)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
     }
 
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {

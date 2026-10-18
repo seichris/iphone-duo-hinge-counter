@@ -1,5 +1,5 @@
 {
-  "checked_on": "2026-09-14",
+  "checked_on": "2026-10-18",
   "source": "https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications",
   "groups": {
     "iphone-6.9": {
@@ -51,7 +51,7 @@
       "required": true
     }
   },
-  "notes": "Duo groups are this project's release requirement, not a claim Apple mandates separate slots. Confirm actual App Store Connect slots after SDK release. iPad is included because TARGETED_DEVICE_FAMILY is 1,2. Landscape uses reversed dimensions. Do not resize ordinary iPhone images to impersonate Duo captures.",
+  "notes": "Apple now accepts Duo outer/inner sizes in one iPhone Duo set (up to 10 images combined), verified in App Store Connect. Starting April 2027, Duo screenshots are required for apps using iOS 27.1 SDK or later. Both Duo displays remain this project's release requirement. iPad is included because TARGETED_DEVICE_FAMILY is 1,2. Landscape uses reversed dimensions. Do not resize ordinary iPhone images to impersonate Duo captures.",
   "storyboard": [
     {
       "order": 1,
@@ -82,6 +82,15 @@
       "screen": "Privacy Policy",
       "headline": "Private by design",
       "caption": "No account, ads or analytics."
+    }
+  ],
+  "combined_groups": [
+    {
+      "names": [
+        "duo-outer",
+        "duo-inner"
+      ],
+      "max_images": 10
     }
   ]
 }

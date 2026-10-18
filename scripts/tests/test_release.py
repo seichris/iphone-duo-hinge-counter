@@ -6,12 +6,13 @@ import struct
 import sys
 import tempfile
 import unittest
+import zlib
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from release_preflight import validate_metadata, validate_pack, evidence_issues, GATES, ARCHIVE_GATES
 from build_site import render_pages
-from check_screenshots import inspect, png_size
+from check_screenshots import inspect, png_size, png_has_alpha
 from select_xcode import version_tuple
 
 
@@ -102,6 +103,34 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(version_tuple('27'), (27, 0, 0))
         with self.assertRaises(ValueError):
             version_tuple('unknown')
+
+    def test_screenshot_alpha_and_truncation_rejected(self):
+        def chunk(kind, payload):
+            return (struct.pack('>I', len(payload)) + kind + payload
+                    + struct.pack('>I', zlib.crc32(kind + payload)))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.png'
+            for color, transparency, expected in [(2, False, False), (6, False, True), (2, True, True)]:
+                data = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', 1, 1, 8, color, 0, 0, 0))
+                if transparency:
+                    data += chunk(b'tRNS', bytes(6))
+                data += chunk(b'IDAT', zlib.compress(bytes(5 if color == 6 else 4))) + chunk(b'IEND', b'')
+                path.write_bytes(data)
+                self.assertEqual(png_has_alpha(path), expected)
+            path.write_bytes(data[:-3])
+            with self.assertRaises(ValueError):
+                png_has_alpha(path)
+
+    def test_duo_screens_share_one_ten_image_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            for group, count in [('duo-inner', 6), ('duo-outer', 5)]:
+                (base / group).mkdir()
+                for index in range(count):
+                    (base / group / f'{index}.png').touch()
+            errors = inspect(base, {'groups': {}, 'combined_groups': [
+                {'names': ['duo-inner', 'duo-outer'], 'max_images': 10}]})
+            self.assertEqual(errors, ['duo-inner, duo-outer: choose at most 10 screenshots combined'])
 
     def test_new_resource_is_in_app_build_phase(self):
         spec = importlib.util.spec_from_file_location('generator_test', ROOT / 'scripts/generate_project.py')
