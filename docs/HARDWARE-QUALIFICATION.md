@@ -1,6 +1,6 @@
 # Physical Duo qualification
 
-This is an execution checklist, not a passing result. Use the processed TestFlight candidate 1.0.0 (5), or record a replacement build explicitly. Store device identifiers, recordings, sample logs and signed-artifact hashes privately in `.release/`. Do not infer hardware results from Simulator, the unsaved demo or synthetic core tests.
+This is an execution checklist, not a passing result. Use candidate 1.0.0 (6) after processing, or record a replacement build explicitly. Store device identifiers, recordings, sample logs and signed-artifact hashes privately in `.release/`. Do not infer hardware results from Simulator, the unsaved demo or synthetic core tests.
 
 ## Record the test identity
 

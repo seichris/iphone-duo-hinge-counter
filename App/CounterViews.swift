@@ -38,6 +38,7 @@ struct CounterRootView: View {
 
 struct DashboardView: View {
     @Environment(CounterModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var countFontSize = 88.0
     @State private var showManualConfirmation = false
     @State private var showDemo = false
@@ -104,11 +105,17 @@ struct DashboardView: View {
 
     private func hero(_ summary: CounterSummary) -> some View {
         VStack(spacing: 12) {
-            HStack {
-                Text("TODAY").font(.caption.weight(.semibold)).tracking(2)
-                Spacer()
-                Label("On-device", systemImage: "lock.shield")
-                    .font(.caption).foregroundStyle(.secondary)
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 8) {
+                    heroHeading
+                    privacyBadge
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack {
+                    heroHeading
+                    Spacer()
+                    privacyBadge
+                }
             }
             FoldGlyph(degrees: model.angle ?? 150)
                 .frame(width: 116, height: 68).padding(.top, 8)
@@ -129,6 +136,16 @@ struct DashboardView: View {
         }
         .frame(maxWidth: .infinity)
         .counterCard()
+    }
+
+    private var heroHeading: some View {
+        Text("TODAY").font(.caption.weight(.semibold)).tracking(2)
+    }
+
+    private var privacyBadge: some View {
+        Label("On-device", systemImage: "lock.shield")
+            .font(.caption).foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
