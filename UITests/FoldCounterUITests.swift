@@ -60,6 +60,7 @@ final class FoldCounterUITests: XCTestCase {
 
     @MainActor func testDocumentAndEraseCancellationPreservesHistory() {
         continueAfterFailure = false
+        executionTimeAllowance = 600
         let app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-test-data"]
         app.launch()
@@ -70,9 +71,16 @@ final class FoldCounterUITests: XCTestCase {
         openTab("Settings", in: app)
         for title in ["Export daily history (CSV)", "Export backup (JSON)", "Restore a JSON backup"] {
             let button = app.buttons[title]
+            for _ in 0..<5 where !button.exists { app.swipeUp() }
             XCTAssertTrue(button.waitForExistence(timeout: 5))
             button.tap()
             let cancel = app.buttons["Cancel"].firstMatch
+            // Files can reopen inside On My iPhone instead of its root browser.
+            // The Cancel control is on the root browser, behind its Back button.
+            if !cancel.waitForExistence(timeout: 5), app.buttons["Save"].exists {
+                let back = app.navigationBars.buttons.firstMatch
+                if back.exists { back.tap() }
+            }
             XCTAssertTrue(cancel.waitForExistence(timeout: 10), "Document picker must allow cancellation")
             cancel.tap()
             XCTAssertFalse(app.alerts["Could not complete the action"].waitForExistence(timeout: 2),

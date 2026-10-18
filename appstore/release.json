@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "marketing_version": "1.0.0",
-  "build_number": "6",
+  "build_number": "7",
   "bundle_identifier": "com.seichris.foldcounter",
   "app_group_identifier": "group.com.seichris.foldcounter",
   "primary_locale": "en-US",

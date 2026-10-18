@@ -4,6 +4,9 @@ import XCTest
 /// These screenshots are review material, not proof of Duo hardware support.
 final class FoldCounterScreenshotTests: XCTestCase {
     @MainActor func testCaptureListingScreensAndBundledHelp() {
+        let landscape = ProcessInfo.processInfo.environment["FOLDCOUNTER_CAPTURE_LANDSCAPE"] == "1"
+        if landscape { XCUIDevice.shared.orientation = .landscapeLeft }
+        defer { if landscape { XCUIDevice.shared.orientation = .portrait } }
         let app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-test-data"]
         app.launch()
