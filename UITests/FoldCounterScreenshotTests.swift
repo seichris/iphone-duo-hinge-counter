@@ -53,6 +53,11 @@ final class FoldCounterScreenshotTests: XCTestCase {
     }
 
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
+        let tabBarButton = app.tabBars.buttons[label]
+        if tabBarButton.waitForExistence(timeout: 2) {
+            tabBarButton.tap()
+            return
+        }
         let navigationButtons = app.buttons.matching(NSPredicate(format: "label == %@", label))
         let firstNavigationButton = navigationButtons.element(boundBy: 0)
         if firstNavigationButton.waitForExistence(timeout: 2) {
