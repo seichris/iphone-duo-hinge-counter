@@ -54,6 +54,36 @@ final class FoldCounterUITests: XCTestCase {
         add(attachment)
     }
 
+    #if DUO_HINGE_API
+    @MainActor func testHingeSubscriptionRefreshesAfterPauseAndResume() throws {
+        guard #available(iOS 27.1, *) else { throw XCTSkip("Hinge API requires iOS 27.1") }
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-test-data"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
+        openTab("Settings", in: app)
+        let toggle = app.switches["Automatic foreground tracking"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        let status = app.staticTexts["trackingStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+        let resolved = NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "Observing while active", "No hinge on this device")
+        for _ in 0..<2 {
+            // Use the actual status value, not a hidden tab or a combined row label.
+            expectation(for: resolved, evaluatedWith: status)
+            waitForExpectations(timeout: 10)
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            print("Tracking after pause: switch=\(String(describing: toggle.value)), status=\(status.label)")
+            expectation(for: NSPredicate(format: "label CONTAINS %@", "Tracking paused"), evaluatedWith: status)
+            waitForExpectations(timeout: 5)
+            toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        }
+        expectation(for: resolved, evaluatedWith: status)
+        waitForExpectations(timeout: 10)
+        openTab("Today", in: app)
+        XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "0", "An initial open pose is not a recorded opening")
+    }
+    #endif
+
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
         let tabBarButton = app.tabBars.buttons[label]
         if tabBarButton.waitForExistence(timeout: 2) {

@@ -1,96 +1,56 @@
 import SwiftUI
 
 #if DUO_HINGE_API
-import ObjectiveC
 import UIKit
 #endif
 
-/// The Duo build keeps the explicit integration gate, but resolves Apple's
-/// public UIKit hinge interaction at runtime. This lets the distribution
-/// archive use a supported stable SDK while iOS 27.1 supplies the interaction
-/// on compatible Duo hardware or the Duo simulator.
+/// The shipping scheme requires the iOS 27.1 SDK. The compatibility scheme
+/// excludes the hinge API and remains useful for ordinary-device Debug testing.
 struct DuoHingeObserver: ViewModifier {
     @Environment(CounterModel.self) private var model
     let scene: UUID
 
     @ViewBuilder func body(content: Content) -> some View {
-        #if DUO_HINGE_API
-        let observationID = model.subscription(for: scene)
-        content.background(
-            HingeInteractionBridge { degrees in
-                guard let observationID else { return }
-                model.receive(degrees: degrees, scene: scene, observationID: observationID)
+        content.background {
+            #if DUO_HINGE_API
+            if #available(iOS 27.1, *), let observationID = model.subscription(for: scene) {
+                HingeInteractionBridge { degrees in
+                    model.receive(degrees: degrees, scene: scene, observationID: observationID)
+                }
+                // A new subscription gets a new interaction and initial update.
+                // Old callbacks retain their original ID and are rejected by the model.
+                .id(observationID)
+                .frame(width: 0, height: 0)
             }
-            .frame(width: 0, height: 0)
-        )
-        #else
-        content
-        #endif
+            #endif
+        }
     }
 }
 
 #if DUO_HINGE_API
-/// A zero-size view that installs Apple's public hinge interaction into the
-/// SwiftUI hierarchy. The runtime lookup keeps the archive buildable with
-/// stable Xcode while retaining live updates on iOS 27.1 Duo runtimes.
+@available(iOS 27.1, *)
 @MainActor
 private struct HingeInteractionBridge: UIViewRepresentable {
     let onAngle: (Double?) -> Void
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onAngle: onAngle)
-    }
-
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
-        if let interaction = context.coordinator.makeInteraction() {
-            view.addInteraction(interaction)
-        } else {
-            // Ordinary iPhones and pre-27.1 systems report hinge absence.
-            onAngle(nil)
+        let interaction = UIHingeInteraction { _, update in
+            // UIKit documents radians; absence breaks observation continuity.
+            onAngle(update.hinge.map { Double($0.angle) * 180 / .pi })
         }
+        view.addInteraction(interaction)
         return view
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        context.coordinator.onAngle = onAngle
-    }
+    func updateUIView(_ uiView: UIView, context: Context) {}
 
-    @MainActor
-    final class Coordinator {
-        var onAngle: (Double?) -> Void
-        private var interaction: UIInteraction?
-
-        init(onAngle: @escaping (Double?) -> Void) {
-            self.onAngle = onAngle
-        }
-
-        func makeInteraction() -> UIInteraction? {
-            guard #available(iOS 27.1, *) else { return nil }
-            guard let interactionType = NSClassFromString("UIHingeInteraction") as? NSObject.Type else {
-                return nil
+    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {
+        for interaction in uiView.interactions {
+            if let hinge = interaction as? UIHingeInteraction {
+                hinge.isEnabled = false
             }
-
-            // UIHingeInteraction's initializer is unavailable to the stable
-            // SDK. Allocate the public class and invoke its documented
-            // initWithUpdateHandler: entry point through Objective-C runtime
-            // metadata; no private framework or selector is introduced.
-            let raw = class_createInstance(interactionType, 0) as! NSObject
-            let handler: @convention(block) (AnyObject, AnyObject) -> Void = { [onAngle] _, update in
-                let hinge = (update as? NSObject)?.value(forKey: "hinge") as? NSObject
-                let radians = (hinge?.value(forKey: "angle") as? NSNumber)?.doubleValue
-                let degrees = radians.map { $0 * 180 / .pi }
-                Task { @MainActor in
-                    onAngle(degrees)
-                }
-            }
-            let selector = NSSelectorFromString("initWithUpdateHandler:")
-            guard let initialized = raw.perform(selector, with: handler)?.takeUnretainedValue() as? NSObject,
-                  let interaction = initialized as? UIInteraction else {
-                return nil
-            }
-            self.interaction = interaction
-            return interaction
+            uiView.removeInteraction(interaction)
         }
     }
 }
@@ -109,9 +69,7 @@ struct AdaptiveDashboard<Primary: View, Secondary: View>: View {
     }
 
     @ViewBuilder var body: some View {
-        // The stable distribution build uses the same size-class-aware layout
-        // on ordinary devices and Duo. It avoids a compile-time dependency on
-        // the beta-only ArrangementView while keeping both panels reachable.
+        // Available space drives layout on ordinary devices and Duo alike.
         standardLayout
     }
 
