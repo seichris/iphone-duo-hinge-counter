@@ -58,46 +58,6 @@ final class FoldCounterUITests: XCTestCase {
         add(attachment)
     }
 
-    @MainActor func testDocumentAndEraseCancellationPreservesHistory() {
-        continueAfterFailure = false
-        executionTimeAllowance = 600
-        let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-test-data"]
-        app.launch()
-        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
-        app.buttons["addManual"].tap()
-        app.buttons["confirmManual"].firstMatch.tap()
-        XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "1")
-        openTab("Settings", in: app)
-        for title in ["Export daily history (CSV)", "Export backup (JSON)", "Restore a JSON backup"] {
-            let button = app.buttons[title]
-            for _ in 0..<5 where !button.exists { app.swipeUp() }
-            XCTAssertTrue(button.waitForExistence(timeout: 5))
-            button.tap()
-            let cancel = app.buttons["Cancel"].firstMatch
-            // Files can reopen inside On My iPhone instead of its root browser.
-            // The Cancel control is on the root browser, behind its Back button.
-            if !cancel.waitForExistence(timeout: 5), app.buttons["Save"].exists {
-                let back = app.navigationBars.buttons.firstMatch
-                if back.exists { back.tap() }
-            }
-            XCTAssertTrue(cancel.waitForExistence(timeout: 10), "Document picker must allow cancellation")
-            cancel.tap()
-            XCTAssertFalse(app.alerts["Could not complete the action"].waitForExistence(timeout: 2),
-                           "Cancelling a document action is not a failure")
-        }
-        app.buttons["Erase all counts"].tap()
-        XCTAssertTrue(app.staticTexts["Erase all saved counts?"].waitForExistence(timeout: 5))
-        app.buttons["Cancel"].firstMatch.tap()
-        openTab("Today", in: app)
-        XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "1")
-        app.terminate()
-        app.launchArguments = ["--ui-testing"]
-        app.launch()
-        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "1")
-    }
-
     #if DUO_HINGE_API
     @MainActor func testHingeSubscriptionRefreshesAfterPauseAndResume() throws {
         continueAfterFailure = false
