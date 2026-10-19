@@ -2,7 +2,7 @@
 
 A native, offline SwiftUI hinge-opening counter. The app uses the supplied Duo Counter logo; no Android code or assets are copied.
 
-**Status — September 21, 2026:** Hinge Counter, history, backup tools, demo, and the WidgetKit extension are implemented. The **FoldCounter Duo** scheme keeps the explicit `DUO_HINGE_API` gate and installs Apple's public `UIHingeInteraction` through a runtime bridge, so the distribution archive builds with stable Xcode 26.6 while iOS 27.1 supplies live hinge updates. Physical hinge callbacks, angle endpoints, display handoff, Device Hub behavior, and signed distribution remain hardware/release gates. The regular scheme does **not** claim to detect a hinge.
+**Status — October 18, 2026:** the Duo scheme now builds against the iOS 27.1 SDK and directly uses Apple's public `UIHingeInteraction`. It retains the explicit `DUO_HINGE_API` gate. Local build, simulator, signing and physical evidence are recorded separately in [validation](docs/VALIDATION.md). Physical angle endpoints and display handoff remain qualification gates. The regular scheme does **not** claim to detect a hinge.
 
 **This is not a 24/7 background hinge counter.** No documented background hinge-event history API was found. The live adapter observes only while the app has an active scene; counts across suspension, lock, termination, or switching apps are not reconstructed. Opening this app on an already-open device does not add a count. Read [the research and capability boundaries](docs/RESEARCH.md) before changing product claims.
 
@@ -35,7 +35,7 @@ For a physical device, select your signing team for the app and widget targets. 
 
 ### The Duo scheme
 
-For the signed distribution candidate, use stable Xcode 26.6 and select **FoldCounter Duo**. This enables `DUO_HINGE_API` and the runtime `UIHingeInteraction` bridge. To exercise the live runtime, run that build on the iOS 27.1 Duo simulator with Xcode 27.1. `python3 scripts/select_xcode.py --duo` remains a declaration probe for the installed beta SDK; it is not a distribution-archive requirement. Simulator runs validate navigation, persistence, adaptive layout reachability, and demo isolation; they do not establish physical hinge callbacks, angle convention, or inner/outer display handoff. See [release gates](docs/TESTING.md).
+For the distribution candidate, use Xcode 27.1 and select **FoldCounter Duo**. This enables `DUO_HINGE_API` and the typed UIKit hinge adapter. Run `python3 scripts/select_xcode.py --duo` to probe the SDK declarations, then build both simulator and generic-device targets. The ordinary Debug scheme remains available for compatibility testing; the Duo scheme no longer supports compiling with an older SDK. Simulator tests establish only the behaviors they exercise, and do not establish physical hinge callbacks, angle endpoints or display handoff. See [release gates](docs/TESTING.md).
 
 Our initial policy is an observed angle of at most 10°, then at least 170°, separated by at least 0.35 seconds. These are app thresholds, not Apple sensor specifications. The adapter's assumption of 0° closed / 180° flat still needs verification against the SDK and hardware. No durability rating or device-lifetime count is assumed.
 

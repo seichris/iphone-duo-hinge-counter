@@ -42,6 +42,10 @@ final class FoldCounterUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
         XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "0")
+        let header = XCTAttachment(screenshot: app.screenshot())
+        header.name = "Largest accessibility dashboard header"
+        header.lifetime = .keepAlways
+        add(header)
         XCTAssertTrue(app.staticTexts["trackingDisclosure"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["trackingDisclosure"].label.contains("not recovered"))
         revealButton(app.buttons["openDemo"], in: app)
@@ -54,7 +58,48 @@ final class FoldCounterUITests: XCTestCase {
         add(attachment)
     }
 
+    #if DUO_HINGE_API
+    @MainActor func testHingeSubscriptionRefreshesAfterPauseAndResume() throws {
+        continueAfterFailure = false
+        guard #available(iOS 27.1, *) else { throw XCTSkip("Hinge API requires iOS 27.1") }
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-test-data"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
+        openTab("Settings", in: app)
+        // SwiftUI exposes the labeled row and the thumb as nested switches.
+        let toggle = app.switches["Automatic foreground tracking"].switches.firstMatch
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        let status = app.staticTexts["trackingStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+        let resolved = NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "Observing while active", "No hinge on this device")
+        for _ in 0..<2 {
+            // Use the actual status value, not a hidden tab or a combined row label.
+            expectation(for: resolved, evaluatedWith: status)
+            waitForExpectations(timeout: 10)
+            toggle.tap()
+            expectation(for: NSPredicate(format: "label CONTAINS %@", "Tracking paused"), evaluatedWith: status)
+            waitForExpectations(timeout: 5)
+            toggle.tap()
+        }
+        expectation(for: resolved, evaluatedWith: status)
+        waitForExpectations(timeout: 10)
+        openTab("Today", in: app)
+        XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "0", "An initial open pose is not a recorded opening")
+    }
+    #endif
+
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
+        let sidebarItem = app.cells[label]
+        if sidebarItem.waitForExistence(timeout: 2) {
+            sidebarItem.tap()
+            return
+        }
+        let adaptiveTab = app.tabs[label]
+        if adaptiveTab.waitForExistence(timeout: 2) {
+            adaptiveTab.tap()
+            return
+        }
         let tabBarButton = app.tabBars.buttons[label]
         if tabBarButton.waitForExistence(timeout: 2) {
             tabBarButton.tap()

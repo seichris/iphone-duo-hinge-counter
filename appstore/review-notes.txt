@@ -1,18 +1,18 @@
-REVIEW-NOTE DRAFT — do not paste until the Duo SDK and hardware release gates pass.
+Hinge Counter 1.0.0 (7) — resubmission
+
+Context for the September 23 rejection (submission 1de44519-7cf2-43c9-9fc4-789804ba5341): Apple announced on October 5 that iPhone Duo optimized apps can now be submitted: https://developer.apple.com/news/?id=kkphp5qo . Build 7 was archived with Xcode 27.1 RC (27A9275), iOS 27.1 SDK, and directly uses public UIKit UIHingeInteraction. The app includes the referenced integration rather than a promise of future functionality.
 
 Hinge Counter is an independent offline utility for recording openings on a supported foldable device. It offers daily/all-time recorded totals, local history charts, manual entry, CSV export, JSON backup/restore and widget snapshots. There is no login or account and no in-app purchase flow.
 
 Automatic observation is foreground-only. It does not keep running while locked, suspended, terminated or while another app is active; it does not reconstruct missed openings. Opening the app on an already-open device does not add a count. Widgets do not monitor sensors. The app does not measure hinge health or remaining hardware life.
 
 Review steps:
-1. On the supported device and validated OS, launch the app. Read the visible tracking-coverage notice.
-2. Leave the app active. Observe a complete close-to-open transition. Confirm one observed opening, subject to the measured display-handoff behavior documented in the attached device-test evidence.
+1. On iPhone Duo with iOS 27.1 or later, launch the app. On iPad and ordinary iPhones, use the manual flow in step 3; these devices cannot demonstrate automatic hinge observation. Read the visible tracking-coverage notice.
+2. On Duo, Today shows the tracking status and live hinge angle when available. Leave the app active through a complete close-to-open transition to exercise automatic observation. Any interruption, including display/scene handoff, resets the observation session; an opening spanning a gap can be missed. Reopening the app does not reconstruct it.
 3. Use + > Add manual opening. Confirm that manual attribution is separate from observed counts.
 4. Open History; switch among 7, 30 and 90 days.
 5. Open Settings > Privacy Policy and Help & Support; the content is available offline.
 6. Export CSV/JSON. Restore only a throwaway test backup after the replacement confirmation. Erase only test data after confirmation.
 7. Add the widget; confirm it displays a saved snapshot, with refresh timing controlled by iOS.
 
-Attach a real-device recording and the exact tested device/OS/build information through App Store Connect, not this public repository. The unsaved demo can illustrate the counting rule, but is not evidence of physical hinge integration. Provide actual review contact details privately in App Store Connect.
-
-Remove this draft heading and replace this paragraph with the measured hardware/OS behavior before submission. Do not submit the regular Debug compatibility scheme, and do not describe a simulated event as a hardware event.
+Validation scope: the iOS 27.1 SDK path compiled for device and simulator. Native Duo simulator checks exercised hinge callbacks, a complete simulated transition, both displays, pause/resume, persistence and demo isolation. All 20 listing images are actual build 7 simulator captures. No physical iPhone Duo was available, so physical angle endpoints, repeated cycles, display-handoff behavior and TestFlight hardware runtime have not been qualified. We do not claim those checks passed. The unsaved demo illustrates the counting rule only and never changes recorded history or widget totals.

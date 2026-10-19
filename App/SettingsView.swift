@@ -42,7 +42,9 @@ struct SettingsView: View {
                     get: { model.archive?.automaticTrackingEnabled ?? false },
                     set: { model.setAutomaticTracking($0) }
                 )).disabled(!model.canEdit)
-                LabeledContent("Status", value: model.trackingTitle)
+                LabeledContent("Status") {
+                    Text(model.trackingTitle).accessibilityIdentifier("trackingStatus")
+                }
             } header: { Text("Tracking") } footer: {
                 Text(model.trackingDetail + " Counting requires observing ≤10°, then ≥170°, at least 0.35 seconds apart. "
                      + "These are this app’s counting thresholds, not a hinge-health measurement.")
@@ -74,7 +76,7 @@ struct SettingsView: View {
                      + "The daily average includes every calendar day since tracking began, including zero days and today. "
                      + "All-time means recorded by this app, not lifetime hardware usage.")
                 #if DEBUG
-                Text("iPhone Duo integration: enabled in the Duo build and validated on the iPhone Duo simulator. "
+                Text("iPhone Duo integration: requires the Duo scheme and iOS 27.1. "
                      + "The standard build supports manual counting and demo mode.")
                 #endif
                 Text("Independent app. Not affiliated with or endorsed by Apple. No hinge durability rating is assumed.")

@@ -4,6 +4,9 @@ import XCTest
 /// These screenshots are review material, not proof of Duo hardware support.
 final class FoldCounterScreenshotTests: XCTestCase {
     @MainActor func testCaptureListingScreensAndBundledHelp() {
+        let landscape = ProcessInfo.processInfo.environment["FOLDCOUNTER_CAPTURE_LANDSCAPE"] == "1"
+        if landscape { XCUIDevice.shared.orientation = .landscapeLeft }
+        defer { if landscape { XCUIDevice.shared.orientation = .portrait } }
         let app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-test-data"]
         app.launch()
@@ -37,13 +40,34 @@ final class FoldCounterScreenshotTests: XCTestCase {
     }
 
     @MainActor private func capture(_ app: XCUIApplication, _ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        // An application-bounds capture on the 27.1 Duo runtime can select the
+        // inactive framebuffer and round off native pixels. Preserve each
+        // screen capture; the release pack must select the active, nonblank
+        // native-resolution display after visual review, without resizing.
+        for (index, screen) in XCUIScreen.screens.enumerated() {
+            let attachment = XCTAttachment(screenshot: screen.screenshot())
+            attachment.name = "\(name)-screen-\(index)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
     }
 
     @MainActor private func openTab(_ label: String, in app: XCUIApplication) {
+        let sidebarItem = app.cells[label]
+        if sidebarItem.waitForExistence(timeout: 2) {
+            sidebarItem.tap()
+            return
+        }
+        let adaptiveTab = app.tabs[label]
+        if adaptiveTab.waitForExistence(timeout: 2) {
+            adaptiveTab.tap()
+            return
+        }
+        let tabBarButton = app.tabBars.buttons[label]
+        if tabBarButton.waitForExistence(timeout: 2) {
+            tabBarButton.tap()
+            return
+        }
         let navigationButtons = app.buttons.matching(NSPredicate(format: "label == %@", label))
         let firstNavigationButton = navigationButtons.element(boundBy: 0)
         if firstNavigationButton.waitForExistence(timeout: 2) {

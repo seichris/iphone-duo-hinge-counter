@@ -19,6 +19,17 @@ def version_tuple(value):
 # Compile the documented surface we use, including Swift 6 callback isolation.
 # A version comparison alone is insufficient: 27.2 beta preceded the Duo SDK.
 DUO_PROBE = '''import SwiftUI
+import UIKit
+@available(iOS 27.1, *)
+@MainActor func probeUIKitHinge(_ view: UIView) {
+    let interaction = UIHingeInteraction { _, update in
+        let degrees = update.hinge.map { Double($0.angle) * 180 / .pi }
+        _ = degrees
+    }
+    interaction.isEnabled = false
+    view.addInteraction(interaction)
+    view.removeInteraction(interaction)
+}
 @available(iOS 27.1, *)
 @MainActor struct DuoSDKProbe: View {
     @State private var degrees: Double?

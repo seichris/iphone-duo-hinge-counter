@@ -46,8 +46,10 @@ jobs:
         run: |
           set -o pipefail
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for devices in d["devices"].values() for v in devices if v["name"].startswith("iPhone") and v.get("isAvailable",False)))')
+          xcrun simctl bootstatus "$DEVICE_ID" -b
           xcodebuild -project FoldCounter.xcodeproj -scheme FoldCounter \
             -destination "platform=iOS Simulator,id=$DEVICE_ID" \
+            -parallel-testing-enabled NO \
             -derivedDataPath DerivedData -resultBundlePath UITestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ui-tests.log
       - name: Export actual UI screenshot attachments
