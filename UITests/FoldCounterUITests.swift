@@ -1,6 +1,31 @@
 import XCTest
 
 final class FoldCounterUITests: XCTestCase {
+    @MainActor func testAllHistoryShowsRecordsOlderThanNinetyDays() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-test-data", "--history-fixture"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
+        openTab("History", in: app)
+        XCTAssertTrue(app.segmentedControls["historyRange"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.otherElements["historyDay-2001-01-01"].exists)
+        app.segmentedControls["historyRange"].buttons["All"].tap()
+        let oldDay = app.descendants(matching: .any).matching(identifier: "historyDay-2001-01-01").firstMatch
+        XCTAssertTrue(oldDay.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Yearly totals"].exists)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "All history with isolated historical fixture"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.terminate()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
+        openTab("History", in: app)
+        app.segmentedControls["historyRange"].buttons["All"].tap()
+        XCTAssertTrue(oldDay.waitForExistence(timeout: 5), "Old history must survive relaunch")
+    }
+
     @MainActor func testManualCountPersistsAndDemoIsIsolated() {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-test-data"]

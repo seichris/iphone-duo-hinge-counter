@@ -27,7 +27,9 @@ struct CounterRootView: View {
         }
         .onDisappear { model.setScene(sceneID, active: false) }
         .onOpenURL { url in
-            if url.scheme == "foldcounter", url.host == "today" { selection = .today }
+            guard url.scheme == "foldcounter" else { return }
+            if url.host == "today" { selection = .today }
+            if url.host == "history" { selection = .history }
         }
         .alert("Could not complete the action", isPresented: Binding(
             get: { model.actionError != nil }, set: { if !$0 { model.actionError = nil } }
@@ -40,7 +42,9 @@ struct DashboardView: View {
     @Environment(CounterModel.self) private var model
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var countFontSize = 88.0
+    #if DEBUG
     @State private var showManualConfirmation = false
+    #endif
     @State private var showDemo = false
 
     var body: some View {
@@ -85,6 +89,7 @@ struct DashboardView: View {
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("Hinge Counter")
+        #if DEBUG
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { showManualConfirmation = true } label: {
@@ -94,12 +99,13 @@ struct DashboardView: View {
         }
         .confirmationDialog("Add one opening manually?", isPresented: $showManualConfirmation,
                             titleVisibility: .visible) {
-            Button("Add manual opening") { model.record(.manual) }
+            Button("Add manual opening") { model.recordManualOpening() }
                 .accessibilityIdentifier("confirmManual")
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This entry will be labeled manual, not sensor-observed.")
         }
+        #endif
         .sheet(isPresented: $showDemo) { DemoView() }
     }
 
@@ -192,26 +198,38 @@ struct MetricCard: View {
 struct HistoryChart: View {
     let archive: CounterArchive
     let now: Date
-    let days: Int
+    let days: Int?
 
     var body: some View {
-        let points = archive.history(last: days, now: now, timeZone: .current)
+        let series = archive.historySeries(last: days, now: now, timeZone: .current)
+        let points = series.points
         VStack(alignment: .leading, spacing: 10) {
+            if days == nil {
+                Text(series.grouping == .day ? "Daily totals" : (series.grouping == .month ? "Monthly totals" : "Yearly totals"))
+                    .font(.subheadline).foregroundStyle(.secondary)
+                if points.isEmpty { Text("No openings recorded yet.").font(.subheadline) }
+            }
             Chart(points) { point in
-                BarMark(x: .value("Day", point.date, unit: .day), y: .value("Opens", point.automatic))
+                BarMark(x: .value("Date", point.date, unit: series.grouping.calendarComponent), y: .value("Opens", point.automatic))
                     .foregroundStyle(by: .value("Source", "Observed"))
-                BarMark(x: .value("Day", point.date, unit: .day), y: .value("Opens", point.manual))
+                BarMark(x: .value("Date", point.date, unit: series.grouping.calendarComponent), y: .value("Opens", point.manual))
                     .foregroundStyle(by: .value("Source", "Manual"))
             }
             .chartForegroundStyleScale(["Observed": Color.mint, "Manual": Color.indigo])
             .chartYScale(domain: 0...max(1, points.map(\.total).max() ?? 1))
             .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: days <= 7 ? 1 : (days <= 30 ? 7 : 14))) {
-                    AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                if let days {
+                    AxisMarks(values: .stride(by: .day, count: days <= 7 ? 1 : (days <= 30 ? 7 : 14))) {
+                        AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                    }
+                } else {
+                    AxisMarks(values: .automatic(desiredCount: 5)) {
+                        AxisValueLabel(format: series.grouping == .year ? .dateTime.year() : .dateTime.month(.abbreviated).year())
+                    }
                 }
             }
             .frame(height: 200)
-            .accessibilityLabel("Daily recorded opens, separated into observed and manual counts")
+            .accessibilityLabel("Recorded opens, separated into observed and manual counts")
             Text("Zero means no opens recorded, not proof that the phone stayed closed.")
                 .font(.caption).foregroundStyle(.secondary)
         }
@@ -221,38 +239,66 @@ struct HistoryChart: View {
 struct HistoryView: View {
     @Environment(CounterModel.self) private var model
     @State private var range = 30
+    @State private var visibleDays = 90
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
             if let archive = model.archive {
+                let allHistory = range == 0
+                let points = allHistory ? archive.recordedHistory(timeZone: .current, latest: visibleDays)
+                    : archive.history(last: range, now: context.date, timeZone: .current)
                 List {
                     Section {
                         Picker("Days", selection: $range) {
                             Text("7 days").tag(7)
                             Text("30 days").tag(30)
                             Text("90 days").tag(90)
-                        }.pickerStyle(.segmented)
-                        HistoryChart(archive: archive, now: context.date, days: range).padding(.vertical, 8)
+                            Text("All").tag(0)
+                        }.pickerStyle(.segmented).accessibilityIdentifier("historyRange")
+                        HistoryChart(archive: archive, now: context.date, days: allHistory ? nil : range)
+                            .padding(.vertical, 8)
                     }
-                    Section("Daily breakdown") {
-                        ForEach(archive.history(last: range, now: context.date, timeZone: .current).reversed()) { day in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(day.day)
-                                    Text("\(day.automatic) observed · \(day.manual) manual")
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Text(day.total.formatted()).monospacedDigit().font(.headline)
-                            }.accessibilityElement(children: .combine)
+                    Section {
+                        ForEach(points.reversed()) { day in
+                            HistoryDayRow(day: day)
+                        }
+                        if allHistory && visibleDays < archive.days.count {
+                            Button("Show older days") { visibleDays += 90 }
+                                .accessibilityIdentifier("olderHistory")
+                        }
+                    } header: {
+                        Text("Daily breakdown")
+                    } footer: {
+                        if allHistory {
+                            Text("All saved dates, newest first. Days without a saved record are omitted here. "
+                                 + "History does not expire after 90 days. Export a JSON backup to keep a separate copy.")
                         }
                     }
                 }
+                .onChange(of: range) { _, _ in visibleDays = 90 }
             } else {
                 ContentUnavailableView("History unavailable", systemImage: "chart.bar",
                     description: Text("Restore access to your data in Settings."))
             }
         }.navigationTitle("History")
+    }
+}
+
+private struct HistoryDayRow: View {
+    let day: HistoryPoint
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(day.day)
+                Text("\(day.automatic) observed · \(day.manual) manual")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(day.total.formatted()).monospacedDigit().font(.headline)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("historyDay-\(day.day)")
     }
 }
 

@@ -34,6 +34,20 @@ final class CounterModel {
         }
         #endif
         file = ArchiveFile(url: directory.appendingPathComponent("counter-v1.json"))
+        #if DEBUG
+        if isUITesting,
+           ProcessInfo.processInfo.arguments.contains("--reset-test-data"),
+           ProcessInfo.processInfo.arguments.contains("--history-fixture") {
+            // Explicit UI-test fixture, confined to UITests and never shared
+            // with widgets. Normal launches cannot seed synthetic history.
+            var fixture = CounterArchive()
+            fixture.startedOn = "2001-01-01"
+            fixture.days = [DayCount(day: "2001-01-01", automatic: 7, manual: 2),
+                            DayCount(day: "2024-01-01", automatic: 3)]
+            do { try file.save(fixture) }
+            catch { actionError = error.localizedDescription }
+        }
+        #endif
         reload()
     }
 
@@ -87,7 +101,13 @@ final class CounterModel {
         }
     }
 
-    func record(_ source: FoldSource) {
+    #if DEBUG
+    func recordManualOpening() {
+        record(.manual)
+    }
+    #endif
+
+    private func record(_ source: FoldSource) {
         guard canEdit, var candidate = archive else { return }
         do {
             try candidate.record(source, at: Date(), timeZone: .current)
@@ -174,7 +194,7 @@ final class CounterModel {
         }
         do {
             try ArchiveFile(url: directory.appendingPathComponent("widget-v1.json")).save(value)
-            WidgetCenter.shared.reloadTimelines(ofKind: "FoldCounterWidget")
+            WidgetCenter.shared.reloadAllTimelines()
             widgetStatus = "Saved counts shared with widgets. Widget refresh timing is controlled by iOS."
         } catch {
             // Widget failure must not roll back an already durable counter transaction.
