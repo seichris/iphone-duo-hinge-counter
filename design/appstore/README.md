@@ -5,4 +5,3 @@
 Created with the built-in image-generation tool and exported at the required pixel dimensions. Original generated files are retained outside the repository. See `prompts.txt` for the prompts.
 
 Specifications: https://developer.apple.com/help/app-store-connect/reference/app-information/creative-assets-specifications
-
