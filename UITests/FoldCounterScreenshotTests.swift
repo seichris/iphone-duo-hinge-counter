@@ -1,6 +1,7 @@
 import XCTest
 
-/// Captures the actual interface using isolated, explicitly manual test entries.
+/// Debug captures use isolated, explicitly manual entries. Release captures
+/// require a clean simulator and never manufacture saved counts.
 /// These screenshots are review material, not proof of Duo hardware support.
 final class FoldCounterScreenshotTests: XCTestCase {
     @MainActor func testCaptureListingScreensAndBundledHelp() {
@@ -11,15 +12,23 @@ final class FoldCounterScreenshotTests: XCTestCase {
         app.launchArguments = ["--ui-testing", "--reset-test-data"]
         app.launch()
         XCTAssertTrue(app.staticTexts["todayCount"].waitForExistence(timeout: 10))
+        #if DEBUG
         for _ in 0..<3 {
             app.buttons["addManual"].tap()
             app.buttons["confirmManual"].firstMatch.tap()
         }
         XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "3")
         capture(app, "01-today-manual-entries")
+        #else
+        XCTAssertFalse(app.buttons["addManual"].exists)
+        XCTAssertEqual(app.staticTexts["todayCount"].value as? String, "0", "Use a clean simulator; release captures never seed or erase counts")
+        capture(app, "01-today-recorded-opens")
+        #endif
         openTab("History", in: app)
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Daily breakdown")).firstMatch.waitForExistence(timeout: 5))
         capture(app, "02-history")
+        app.segmentedControls["historyRange"].buttons["All"].tap()
+        capture(app, "02-history-all")
         openTab("Settings", in: app)
         XCTAssertTrue(app.buttons["privacyPolicy"].waitForExistence(timeout: 5))
         capture(app, "03-settings")
