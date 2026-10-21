@@ -9,12 +9,12 @@ A native, offline SwiftUI hinge-opening counter. The app uses the supplied Duo C
 ## Included
 
 - Today, all-time recorded totals, and daily average; observed and manual counts kept separate.
-- Seven-, 30-, and 90-day history charts and accessible daily breakdowns.
+- Seven-, 30-, and 90-day charts plus **All** history. Longer spans use monthly/yearly chart totals; paged daily breakdowns expose every saved date. History never expires just because it is old.
 - Adaptive compact/regular layouts, native navigation, dark mode, Dynamic Type, and Reduce Motion support. The same size-class layout keeps both panels reachable on Duo and ordinary iPhones.
 - A one-leader, multiwindow-safe hinge state machine with wide angle hysteresis, duplicate rejection, and lifecycle invalidation.
 - Local atomic JSON persistence; corrupted files are not silently replaced. Failed writes pause counting and preserve one pending change for retry.
 - CSV export, versioned JSON backup/restore with validation and replacement confirmation, and explicit erase confirmation.
-- Small/medium Home Screen and rectangular Lock Screen widgets. Widgets display snapshots, not live sensor monitoring.
+- Four small/medium Home Screen and rectangular Lock Screen widgets: **all-time**, **today**, **this week**, and **this month**. Widgets read saved snapshots, include labeled historical manual entries, and never monitor the hinge. Current periods stop at today; weeks follow the device’s first-weekday setting and months use Gregorian local dates.
 - An isolated, interactive demo that never changes real totals.
 - Swift Package core tests, UI smoke tests, reproducible Xcode-project/icon generation, and macOS CI.
 
@@ -30,6 +30,8 @@ open FoldCounter.xcodeproj
 ```
 
 Select **FoldCounter**, choose an iPhone simulator, and Run. Manual entries and the unsaved demo work without foldable hardware. The project is generated using Python's standard library and the supplied opaque 1024px App Store icon is checked in; no XcodeGen, CocoaPods, or external Swift packages are needed.
+
+Manual entry is a development-only tool: **Debug** and **Duo Debug** include the add button and confirmation; **Duo Release** compiles out those controls and the model's manual-entry action. One app target serves development and production without separate app versions. Existing manual entries in saved or restored history remain labeled and included in totals.
 
 For a physical device, select your signing team for the app and widget targets. Register/use a matching App Group; the project-level `APP_GROUP_IDENTIFIER` defaults to `group.com.seichris.foldcounter`. Change the bundle identifiers and App Group together when using a different developer account. The counter stores its authoritative data in the app sandbox and remains functional if widget sharing is unavailable.
 
@@ -74,3 +76,5 @@ python3 scripts/release_preflight.py
 ```
 
 A passing draft check is not permission to publish. The strict preflight requires current-commit evidence, real screenshots and live support/privacy pages. The standard scheme is now **Debug-only**; non-Duo distribution builds are intentionally rejected. Use `FoldCounter Duo` for the final archive only after its SDK and physical-device gates pass. Signing, App Store Connect account setup and actual submission are not performed by this repository.
+
+History retention has no rolling date cutoff. Existing safety limits remain: 50,000 saved daily buckets (over 136 years of daily records), one billion recorded openings, and an 8 MB backup. Widgets schedule local-midnight entries ahead of the requested refresh so saved day/week/month totals roll over even if iOS delays refreshing. They cannot recover openings the app did not observe.

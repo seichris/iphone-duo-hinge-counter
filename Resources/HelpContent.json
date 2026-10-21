@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-21",
+  "updated": "2026-10-21",
   "privacy_url": "https://seichris.github.io/iphone-duo-hinge-counter/privacy.html",
   "support_url": "https://seichris.github.io/iphone-duo-hinge-counter/support.html",
   "issue_url": "https://github.com/seichris/iphone-duo-hinge-counter/issues/new",
@@ -32,15 +32,19 @@
   "support": [
     {
       "title": "Why does the count miss openings?",
-      "body": "Automatic counting requires a supported hinge, tracking enabled, and a complete close-to-open movement observed while the app is active. Background, lock-screen and display-handoff interruptions can break observation. The app does not query a lifetime hardware counter. Add a clearly labeled manual entry when needed."
+      "body": "Automatic counting requires a supported hinge, tracking enabled, and a complete close-to-open movement observed while the app is active. Background, lock-screen and display-handoff interruptions can break observation. The app does not query a lifetime hardware counter. Manual entry is a development-only tool; production cannot add manual counts. Existing manual entries in restored history remain labeled."
     },
     {
       "title": "What counts as one opening?",
       "body": "The current detector requires an observed angle of 10 degrees or less followed by 170 degrees or more, at least 0.35 seconds apart. Partial folds do not rearm it. These are app thresholds, not an Apple specification or a hardware-durability test."
     },
     {
+      "title": "Can I see history older than 90 days?",
+      "body": "Yes. Choose History > All to see every saved date. The chart groups longer spans into monthly or yearly totals, and Show older days reveals earlier daily records. Days without a saved record are omitted from the All daily list. Records do not expire after 90 days. Erasing history, restoring a replacement backup, or removing app data can remove records, so keep a JSON backup for a separate copy."
+    },
+    {
       "title": "Why does my widget look old?",
-      "body": "Widgets show saved snapshots and iOS controls refresh timing. They do not keep hinge monitoring alive. Open the app, check Settings > Widgets for a sharing error, and allow iOS to refresh. During testing, the app and extension must have matching App Group signing."
+      "body": "Widgets show saved snapshots and iOS controls refresh timing. They do not keep hinge monitoring alive. Open the app, check Settings > Widgets for a sharing error, and allow iOS to refresh. During testing, the app and extension must have matching App Group signing. Choose separate all-time, today, this week or this month widgets. Weeks follow the device’s first day of the week; months use Gregorian local dates. Current periods include saved dates through today. Historical manual entries remain included and labeled."
     },
     {
       "title": "Back up, restore or erase",
