@@ -104,6 +104,23 @@ def evidence_issues(evidence: dict, expected_commit: str, *, archive: bool = Fal
     return errors
 
 
+def source_tree_issues(root: Path) -> list[str]:
+    errors = []
+    dirty = subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=root)
+    if dirty.strip():
+        errors.append("Commit tracked source changes before collecting release evidence")
+    # The generator discovers sources and actool consumes the asset catalog from disk.
+    # Local Git exclusions must not hide a file that goes into the approved build.
+    extra = subprocess.check_output([
+        "git", "ls-files", "--others", "--exclude=.DS_Store", "--",
+        ":(glob)App/*.swift", ":(glob)Widget/*.swift", ":(glob)Sources/FoldCounterCore/*.swift",
+        ":(glob)UITests/*.swift", "Resources/Assets.xcassets/",
+    ], cwd=root, text=True)
+    if extra:
+        errors.append("Release build contains untracked inputs:\n" + extra.rstrip())
+    return errors
+
+
 def check_urls(metadata: dict) -> list[str]:
     errors = []
     for field in ("marketing_url", "privacy_url", "support_url"):
@@ -136,9 +153,7 @@ def main() -> int:
             print(f"{field}: {len(metadata.get(field, ''))}/{limit}")
         if args.strict or args.archive:
             commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-            dirty = subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True)
-            if dirty.strip():
-                errors.append("Commit tracked source changes before collecting release evidence")
+            errors += source_tree_issues(ROOT)
             evidence = read_json(args.evidence) if args.evidence.exists() else {}
             errors += evidence_issues(evidence, commit, archive=args.archive)
             if args.strict:

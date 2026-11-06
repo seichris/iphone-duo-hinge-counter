@@ -97,11 +97,7 @@ struct SettingsView: View {
                 let url = try result.get()
                 let scoped = url.startAccessingSecurityScopedResource()
                 defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                let handle = try FileHandle(forReadingFrom: url)
-                defer { try? handle.close() }
-                // Bound allocation before decoding an untrusted backup.
-                let data = try handle.read(upToCount: ArchiveFile.maximumBytes + 1) ?? Data()
-                replacement = try ArchiveFile.decode(data)
+                replacement = try ArchiveFile(url: url).load()
                 confirmRestore = true
             } catch { model.actionError = error.localizedDescription }
         }
