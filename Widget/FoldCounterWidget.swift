@@ -36,8 +36,7 @@ private struct CounterProvider: TimelineProvider {
         guard let group = Bundle.main.object(forInfoDictionaryKey: "FoldCounterAppGroup") as? String,
               let folder = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: group) else { return nil }
         // Read only. A missing/corrupt snapshot means unavailable, not a fabricated zero.
-        guard let data = try? Data(contentsOf: folder.appendingPathComponent("widget-v1.json")) else { return nil }
-        return try? ArchiveFile.decode(data)
+        return try? ArchiveFile(url: folder.appendingPathComponent("widget-v1.json")).load()
     }
 }
 

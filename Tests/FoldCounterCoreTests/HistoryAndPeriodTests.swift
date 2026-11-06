@@ -140,6 +140,43 @@ func snapshotMidnightsRemainDistinctAcrossDST(start: String) {
     #expect(archive.count(for: .allTime, now: dates[35], calendar: calendar).total == 10)
 }
 
+@Test(arguments: [("America/Santiago", "2026-09-06T16:00:00Z"),
+                  ("America/Havana", "2026-03-08T16:00:00Z")])
+func widgetBuiltOnAMissingMidnightResetsAtEachFollowingDayStart(zone: String, instant: String) {
+    let calendar = localCalendar(zone)
+    let now = moment(instant)
+    #expect(calendar.component(.hour, from: calendar.startOfDay(for: now)) == 1)
+    let dates = CounterSnapshotTimeline.dates(now: now, calendar: calendar)
+    #expect(dates.count == 36)
+    #expect(zip(dates, dates.dropFirst()).allSatisfy { $0 < $1 })
+    #expect(dates.dropFirst().allSatisfy { $0 == calendar.startOfDay(for: $0) })
+    #expect(Set(dates.map { DayKey.make($0, in: calendar.timeZone) }).count == 36)
+}
+
+@Test func allHistoryLabelsDistinguishDailyBarsWithinAMonth() {
+    let first = moment("2026-10-04T12:00:00Z")
+    let second = moment("2026-10-05T12:00:00Z")
+    #expect(first.formatted(HistoryGrouping.day.axisLabelFormat) != second.formatted(HistoryGrouping.day.axisLabelFormat))
+    #expect(first.formatted(HistoryGrouping.month.axisLabelFormat) == second.formatted(HistoryGrouping.month.axisLabelFormat))
+}
+
+@Test func allHistoryLabelsOnlySavedBucketsAndIncludesBothEnds() {
+    let first = moment("2026-10-01T12:00:00Z")
+    var archive = CounterArchive(now: first, timeZone: historyUTC)
+    func series() -> HistorySeries {
+        archive.historySeries(last: nil, now: first, timeZone: historyUTC)
+    }
+    #expect(series().axisDates.isEmpty)
+    archive.days = [DayCount(day: "2026-10-01", manual: 1)]
+    #expect(series().axisDates == [first])
+    for offset in 1...20 {
+        let day = DayKey.make(first.addingTimeInterval(Double(offset) * 86_400), in: historyUTC)
+        archive.days.append(DayCount(day: day, automatic: 1))
+    }
+    let long = series()
+    #expect(long.axisDates == [0, 5, 10, 15, 20].map { long.points[$0].date })
+}
+
 @Test func nonGregorianDeviceCalendarStillMatchesGregorianArchiveKeys() {
     var calendar = Calendar(identifier: .hebrew)
     calendar.timeZone = historyUTC

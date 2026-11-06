@@ -10,11 +10,30 @@ public enum HistoryGrouping: Sendable {
         case .year: .year
         }
     }
+
+    var axisLabelFormat: Date.FormatStyle {
+        switch self {
+        case .day: .dateTime.day().month(.abbreviated)
+        case .month: .dateTime.month(.abbreviated).year()
+        case .year: .dateTime.year()
+        }
+    }
 }
 
 public struct HistorySeries: Sendable {
     public let points: [HistoryPoint]
     public let grouping: HistoryGrouping
+
+    /// Label saved buckets in the All chart. Automatic date ticks can label
+    /// the same bar several times when the series contains just one bucket.
+    var axisDates: [Date] {
+        let maximumLabels = 5
+        guard points.count > maximumLabels else { return points.map(\.date) }
+        let last = points.count - 1
+        return (0..<maximumLabels).map { index in
+            points[index * last / (maximumLabels - 1)].date
+        }
+    }
 }
 
 extension CounterArchive {

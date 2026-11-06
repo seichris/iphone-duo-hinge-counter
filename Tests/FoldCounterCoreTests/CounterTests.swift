@@ -341,6 +341,68 @@ func invalidAnglesBreakContinuity(angle: Double) {
     #expect(throws: (any Error).self) { try ArchiveFile.decode(data) }
 }
 
+@Test func backupCannotStartAfterItsEarliestRecord() throws {
+    var archive = CounterArchive(now: noon, timeZone: utc)
+    let earlier = date("2026-09-01T12:00:00Z")
+    try archive.record(.hinge, at: earlier, timeZone: utc)
+    #expect(archive.startedOn == "2026-09-01")
+    #expect(try ArchiveFile.decode(ArchiveFile.encode(archive)) == archive)
+
+    archive.startedOn = "2026-09-14"
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let inconsistent = try encoder.encode(archive)
+    #expect(throws: CounterDataError.self) { try ArchiveFile.decode(inconsistent) }
+}
+
+@Test func rejectedEventLeavesTheCounterUsable() throws {
+    var archive = CounterArchive(now: noon, timeZone: utc)
+    let before = archive
+    #expect(throws: CounterDataError.self) {
+        try archive.record(.hinge, at: date("1999-12-31T23:59:59Z"), timeZone: utc)
+    }
+    #expect(archive == before)
+    try archive.record(.manual, at: noon, timeZone: utc)
+    #expect(archive.days == [DayCount(day: before.startedOn, manual: 1)])
+}
+
+@Test func fullDayCapacityAcceptsExistingDaysAndRejectsNewDaysAtomically() throws {
+    let start = date("2000-01-01T12:00:00Z")
+    var archive = CounterArchive(now: start, timeZone: utc)
+    archive.days = (0..<CounterArchive.maximumDays).map { offset in
+        DayCount(day: DayKey.make(start.addingTimeInterval(Double(offset) * 86_400), in: utc), automatic: 1)
+    }
+    try archive.record(.manual, at: start, timeZone: utc)
+    #expect(archive.days.first?.manual == 1)
+    let before = archive
+    let next = start.addingTimeInterval(Double(CounterArchive.maximumDays) * 86_400)
+    #expect(throws: CounterDataError.self) { try archive.record(.hinge, at: next, timeZone: utc) }
+    #expect(archive == before)
+}
+
+@Test func readOnlySnapshotNeverCreatesAMissingFile() {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    #expect(throws: (any Error).self) { try ArchiveFile(url: url).load() }
+    #expect(!FileManager.default.fileExists(atPath: url.path))
+}
+
+@Test func fileReadAcceptsTheExactLimitAndPreservesOversizedHistory() throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: url) }
+    let archive = CounterArchive(now: noon, timeZone: utc)
+    var data = try ArchiveFile.encode(archive)
+    data.append(Data(repeating: 0x20, count: ArchiveFile.maximumBytes - data.count))
+    try data.write(to: url)
+    let file = ArchiveFile(url: url)
+    #expect(try file.load() == archive)
+    let handle = try FileHandle(forWritingTo: url)
+    defer { try? handle.close() }
+    let oversized = UInt64(ArchiveFile.maximumBytes + 1)
+    try handle.truncate(atOffset: oversized)
+    #expect(throws: CounterDataError.self) { try file.load(orCreate: CounterArchive()) }
+    #expect(try handle.seekToEnd() == oversized)
+}
+
 @Test func filePersistenceSurvivesNewStore() throws {
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: folder) }

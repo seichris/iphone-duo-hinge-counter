@@ -110,6 +110,9 @@ public struct CounterArchive: Codable, Equatable, Sendable {
                   day.automatic <= Self.maximumTotal, day.manual <= Self.maximumTotal else {
                 throw CounterDataError.invalid("Invalid or duplicated daily record.")
             }
+            guard day.day >= startedOn else {
+                throw CounterDataError.invalid("A saved day precedes the tracking start date.")
+            }
             total += day.automatic + day.manual
             guard total <= Self.maximumTotal else {
                 throw CounterDataError.invalid("The backup exceeds the supported counter limit.")
@@ -124,13 +127,22 @@ public struct CounterArchive: Codable, Equatable, Sendable {
             throw CounterDataError.invalid("Invalid event date.")
         }
         let key = DayKey.make(date, in: timeZone)
+        guard DayKey.date(key, in: TimeZone(secondsFromGMT: 0)!) != nil else {
+            throw CounterDataError.invalid("Invalid event date.")
+        }
         guard days.reduce(0, { $0 + $1.total }) < Self.maximumTotal else {
             throw CounterDataError.invalid("The counter limit has been reached.")
         }
-        if !days.contains(where: { $0.day == key }) {
+        let index: Int
+        if let existing = days.firstIndex(where: { $0.day == key }) {
+            index = existing
+        } else {
+            guard days.count < Self.maximumDays else {
+                throw CounterDataError.invalid("The daily record limit has been reached.")
+            }
+            index = days.endIndex
             days.append(DayCount(day: key))
         }
-        let index = days.firstIndex(where: { $0.day == key })!
         switch source {
         case .hinge: days[index].automatic += 1
         case .manual: days[index].manual += 1
@@ -138,7 +150,6 @@ public struct CounterArchive: Codable, Equatable, Sendable {
         // Allows an explicit manual entry or clock/time-zone correction to precede setup.
         startedOn = min(startedOn, key)
         days.sort { $0.day < $1.day }
-        try validated()
     }
 
     public func summary(now: Date, timeZone: TimeZone) -> CounterSummary {

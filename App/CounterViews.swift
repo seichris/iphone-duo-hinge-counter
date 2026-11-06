@@ -160,7 +160,7 @@ struct TrackingCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(model.trackingTitle, systemImage: model.hingeDetected == true ? "waveform.path" : "info.circle")
+            Label(model.trackingTitle, systemImage: model.angle != nil ? "waveform.path" : "info.circle")
                 .font(.headline)
             Text(model.trackingDetail).font(.subheadline).foregroundStyle(.secondary)
                 .accessibilityIdentifier("trackingDisclosure")
@@ -223,8 +223,8 @@ struct HistoryChart: View {
                         AxisValueLabel(format: .dateTime.day().month(.abbreviated))
                     }
                 } else {
-                    AxisMarks(values: .automatic(desiredCount: 5)) {
-                        AxisValueLabel(format: series.grouping == .year ? .dateTime.year() : .dateTime.month(.abbreviated).year())
+                    AxisMarks(values: series.axisDates) {
+                        AxisValueLabel(format: series.grouping.axisLabelFormat)
                     }
                 }
             }

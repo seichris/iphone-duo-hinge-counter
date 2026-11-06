@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -10,7 +11,7 @@ import zlib
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from release_preflight import validate_metadata, validate_pack, evidence_issues, GATES, ARCHIVE_GATES
+from release_preflight import validate_metadata, validate_pack, evidence_issues, source_tree_issues, GATES, ARCHIVE_GATES
 from build_site import render_pages
 from check_screenshots import inspect, png_size, png_has_alpha
 from select_xcode import version_tuple
@@ -72,6 +73,25 @@ class ReleaseTests(unittest.TestCase):
     def test_candidate_archive_still_requires_signing_evidence(self):
         self.assertIn('BLOCKED: signing_and_app_record',
                       evidence_issues({'source_commit': 'a' * 40}, 'a' * 40, archive=True))
+
+    def test_release_evidence_excludes_local_sources_and_assets_even_if_ignored(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(['git', 'init', '-q', directory], check=True)
+            (root / '.git/info/exclude').write_text('Widget/Extra.swift\n.release/\n')
+            (root / '.release').mkdir()
+            (root / '.release/evidence.json').write_text('{}')
+            self.assertEqual(source_tree_issues(root), [])
+            paths = ['App/Extra.swift', 'Widget/Extra.swift', 'Sources/FoldCounterCore/Extra.swift',
+                     'UITests/Extra.swift', 'Resources/Assets.xcassets/Extra.imageset/Contents.json']
+            for name in paths:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+            issues = source_tree_issues(root)
+            self.assertEqual(len(issues), 1)
+            for name in paths:
+                self.assertIn(name, issues[0])
 
     def test_truthy_strings_cannot_approve_release(self):
         evidence = {'source_commit': 'a' * 40, 'approvals': {

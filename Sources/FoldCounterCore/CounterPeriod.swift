@@ -43,7 +43,13 @@ public enum CounterSnapshotTimeline {
     /// Schedule local-midnight presentations in advance, including week/month
     /// rollovers, even when iOS delays the requested next-day refresh.
     public static func dates(now: Date, calendar: Calendar) -> [Date] {
-        let midnight = calendar.startOfDay(for: now)
-        return [now] + (1...35).compactMap { calendar.date(byAdding: .day, value: $0, to: midnight) }
+        var dates = [now]
+        var current = now
+        for _ in 0..<35 {
+            guard let next = calendar.dateInterval(of: .day, for: current)?.end, next > current else { break }
+            dates.append(next)
+            current = next
+        }
+        return dates
     }
 }

@@ -9,7 +9,7 @@ final class CounterModel {
     var actionError: String?
     private(set) var widgetStatus = "Open the app to publish a widget snapshot."
     private(set) var angle: Double?
-    private(set) var hingeDetected: Bool?
+    private var receivedHingeUpdate = false
     private(set) var foreground = false
     private(set) var observationID: UUID?
     private(set) var sensorLeader: UUID?
@@ -60,8 +60,8 @@ final class CounterModel {
         #if DUO_HINGE_API
         if #available(iOS 27.1, *) {
             if !foreground { return "Observation paused" }
-            if hingeDetected == false { return "No hinge on this device" }
-            if hingeDetected == true { return "Observing while active" }
+            if angle != nil { return "Observing while active" }
+            if receivedHingeUpdate { return "Hinge reading unavailable" }
             return "Waiting for a hinge update"
         }
         return "iOS 27.1 required for the hinge"
@@ -76,13 +76,8 @@ final class CounterModel {
     }
 
     func setScene(_ id: UUID, active: Bool) {
-        let previous = session.leader
         session.setActive(active, scene: id)
         foreground = session.leader != nil
-        if previous != session.leader {
-            angle = nil
-            hingeDetected = nil
-        }
         updateObservation()
     }
 
@@ -92,7 +87,7 @@ final class CounterModel {
 
     func receive(degrees: Double?, scene: UUID, observationID: UUID) {
         guard session.subscription(for: scene) == observationID else { return }
-        hingeDetected = degrees != nil
+        receivedHingeUpdate = true
         angle = degrees.flatMap { $0.isFinite && (0...180).contains($0) ? $0 : nil }
         let duration = origin.duration(to: clock.now).components
         let seconds = Double(duration.seconds) + Double(duration.attoseconds) / 1e18
@@ -176,10 +171,11 @@ final class CounterModel {
     private func updateObservation() {
         session.setEnabled(canEdit && archive?.automaticTrackingEnabled == true)
         sensorLeader = session.isEnabled ? session.leader : nil
-        observationID = sensorLeader.map { _ in session.observationID }
-        if observationID == nil {
+        let nextID = sensorLeader.map { _ in session.observationID }
+        if observationID != nextID {
             angle = nil
-            hingeDetected = nil
+            receivedHingeUpdate = false
+            observationID = nextID
         }
     }
 

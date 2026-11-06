@@ -97,7 +97,7 @@ final class FoldCounterUITests: XCTestCase {
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
         let status = app.staticTexts["trackingStatus"]
         XCTAssertTrue(status.waitForExistence(timeout: 5))
-        let resolved = NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "Observing while active", "No hinge on this device")
+        let resolved = NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "Observing while active", "Hinge reading unavailable")
         for _ in 0..<2 {
             // Use the actual status value, not a hidden tab or a combined row label.
             expectation(for: resolved, evaluatedWith: status)
