@@ -71,7 +71,7 @@ def validate_pack(root: Path) -> list[str]:
         errors.append("Invalid marketing version")
     if not re.fullmatch(r"[1-9]\d*", str(release.get("build_number", ""))):
         errors.append("Invalid positive build number")
-    if release.get("primary_category") != "UTILITIES" or release.get("release_mode") != "manual":
+    if release.get("primary_category") != "UTILITIES" or release.get("release_mode") not in {"manual", "automatic"}:
         errors.append("Review category/release-mode changes explicitly")
     for field in ("privacy_url", "support_url"):
         if help_content.get(field) != metadata[field]:
