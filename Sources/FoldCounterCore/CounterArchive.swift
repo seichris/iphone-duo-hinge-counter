@@ -1,7 +1,11 @@
 import Foundation
 
 public enum FoldSource: String, Codable, Sendable {
-    case hinge, manual
+    case hinge, manual, shortcut
+}
+
+public enum CountingMethod: String, Codable, Sendable {
+    case foreground, shortcuts
 }
 
 public enum CounterDataError: Error, LocalizedError {
@@ -48,13 +52,15 @@ public struct DayCount: Codable, Equatable, Identifiable, Sendable {
     public var day: String
     public var automatic: Int
     public var manual: Int
+    public var shortcuts: Int
     public var id: String { day }
-    public var total: Int { automatic + manual }
+    public var total: Int { automatic + manual + shortcuts }
 
-    public init(day: String, automatic: Int = 0, manual: Int = 0) {
+    public init(day: String, automatic: Int = 0, manual: Int = 0, shortcuts: Int = 0) {
         self.day = day
         self.automatic = automatic
         self.manual = manual
+        self.shortcuts = shortcuts
     }
 }
 
@@ -63,14 +69,16 @@ public struct HistoryPoint: Identifiable, Equatable, Sendable {
     public let date: Date
     public let automatic: Int
     public let manual: Int
+    public let shortcuts: Int
     public var id: String { day }
-    public var total: Int { automatic + manual }
+    public var total: Int { automatic + manual + shortcuts }
 }
 
 public struct CounterSummary: Equatable, Sendable {
     public let today: Int
     public let automaticToday: Int
     public let manualToday: Int
+    public let shortcutsToday: Int
     public let total: Int
     public let dailyAverage: Double
     public let daysTracked: Int
@@ -78,10 +86,11 @@ public struct CounterSummary: Equatable, Sendable {
 
 /// Aggregate daily buckets keep storage bounded by days, not 60 Hz sensor samples.
 public struct CounterArchive: Codable, Equatable, Sendable {
-    public var schemaVersion = 1
+    public var schemaVersion = 2
     public var createdAt: Date
     public var startedOn: String
     public var automaticTrackingEnabled = true
+    public var countingMethod: CountingMethod = .foreground
     public var days: [DayCount] = []
     public static let maximumTotal = 1_000_000_000
     public static let maximumDays = 50_000
@@ -91,9 +100,35 @@ public struct CounterArchive: Codable, Equatable, Sendable {
         startedOn = DayKey.make(now, in: timeZone)
     }
 
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let version = try values.decode(Int.self, forKey: .schemaVersion)
+        switch version {
+        case 1:
+            struct LegacyDay: Decodable {
+                let day: String
+                let automatic: Int
+                let manual: Int
+            }
+            days = try values.decode([LegacyDay].self, forKey: .days).map {
+                DayCount(day: $0.day, automatic: $0.automatic, manual: $0.manual)
+            }
+        case 2:
+            countingMethod = try values.decode(CountingMethod.self, forKey: .countingMethod)
+            days = try values.decode([DayCount].self, forKey: .days)
+        default:
+            throw CounterDataError.invalid("Unsupported backup version. Nothing was changed.")
+        }
+        createdAt = try values.decode(Date.self, forKey: .createdAt)
+        startedOn = try values.decode(String.self, forKey: .startedOn)
+        automaticTrackingEnabled = try values.decode(Bool.self, forKey: .automaticTrackingEnabled)
+    }
+
+    public var observesHinge: Bool { automaticTrackingEnabled && countingMethod == .foreground }
+
     @discardableResult
     public func validated() throws -> Self {
-        guard schemaVersion == 1 else {
+        guard schemaVersion == 2 else {
             throw CounterDataError.invalid("Unsupported backup version. Nothing was changed.")
         }
         let utc = TimeZone(secondsFromGMT: 0)!
@@ -107,13 +142,14 @@ public struct CounterArchive: Codable, Equatable, Sendable {
         for day in days {
             guard DayKey.date(day.day, in: utc) != nil, seen.insert(day.day).inserted,
                   day.automatic >= 0, day.manual >= 0,
-                  day.automatic <= Self.maximumTotal, day.manual <= Self.maximumTotal else {
+                  day.automatic <= Self.maximumTotal, day.manual <= Self.maximumTotal,
+                  (0...Self.maximumTotal).contains(day.shortcuts) else {
                 throw CounterDataError.invalid("Invalid or duplicated daily record.")
             }
             guard day.day >= startedOn else {
                 throw CounterDataError.invalid("A saved day precedes the tracking start date.")
             }
-            total += day.automatic + day.manual
+            total += day.total
             guard total <= Self.maximumTotal else {
                 throw CounterDataError.invalid("The backup exceeds the supported counter limit.")
             }
@@ -123,6 +159,13 @@ public struct CounterArchive: Codable, Equatable, Sendable {
 
     public mutating func record(_ source: FoldSource, at date: Date, timeZone: TimeZone) throws {
         try validated()
+        switch source {
+        case .hinge where !observesHinge:
+            throw CounterDataError.invalid("Foreground hinge tracking is off.")
+        case .shortcut where !automaticTrackingEnabled || countingMethod != .shortcuts:
+            throw CounterDataError.invalid("Choose Shortcuts in Hinge Counter settings and turn on tracking to record an opening.")
+        default: break
+        }
         guard date.timeIntervalSince1970.isFinite else {
             throw CounterDataError.invalid("Invalid event date.")
         }
@@ -146,6 +189,7 @@ public struct CounterArchive: Codable, Equatable, Sendable {
         switch source {
         case .hinge: days[index].automatic += 1
         case .manual: days[index].manual += 1
+        case .shortcut: days[index].shortcuts += 1
         }
         // Allows an explicit manual entry or clock/time-zone correction to precede setup.
         startedOn = min(startedOn, key)
@@ -158,7 +202,7 @@ public struct CounterArchive: Codable, Equatable, Sendable {
         let total = days.reduce(0) { $0 + $1.total }
         let tracked = DayKey.inclusiveDays(from: startedOn, through: key)
         return CounterSummary(today: today.total, automaticToday: today.automatic,
-                              manualToday: today.manual, total: total,
+                              manualToday: today.manual, shortcutsToday: today.shortcuts, total: total,
                               dailyAverage: Double(total) / Double(tracked), daysTracked: tracked)
     }
 
@@ -169,13 +213,13 @@ public struct CounterArchive: Codable, Equatable, Sendable {
             guard let date = calendar.date(byAdding: .day, value: -offset, to: now) else { return nil }
             let key = DayKey.make(date, in: timeZone)
             let day = totals[key] ?? DayCount(day: key)
-            return HistoryPoint(day: key, date: date, automatic: day.automatic, manual: day.manual)
+            return HistoryPoint(day: key, date: date, automatic: day.automatic, manual: day.manual, shortcuts: day.shortcuts)
         }
     }
 
     public func csv() -> String {
         // Only validated ISO day keys and integers are exported; no formula-capable user strings.
-        "local_date,observed_opens,manual_opens,total\r\n" + days.sorted { $0.day < $1.day }
-            .map { "\($0.day),\($0.automatic),\($0.manual),\($0.total)\r\n" }.joined()
+        "local_date,observed_opens,manual_opens,total,shortcut_opens\r\n" + days.sorted { $0.day < $1.day }
+            .map { "\($0.day),\($0.automatic),\($0.manual),\($0.total),\($0.shortcuts)\r\n" }.joined()
     }
 }

@@ -45,7 +45,7 @@ extension CounterArchive {
         return visible.compactMap { day in
             guard let date = DayKey.date(day.day, in: timeZone)
                 ?? DayKey.date(day.day, in: TimeZone(secondsFromGMT: 0)!) else { return nil }
-            return HistoryPoint(day: day.day, date: date, automatic: day.automatic, manual: day.manual)
+            return HistoryPoint(day: day.day, date: date, automatic: day.automatic, manual: day.manual, shortcuts: day.shortcuts)
         }
     }
 
@@ -72,12 +72,13 @@ extension CounterArchive {
             var bucket = buckets[key] ?? DayCount(day: key)
             bucket.automatic += day.automatic
             bucket.manual += day.manual
+            bucket.shortcuts += day.shortcuts
             buckets[key] = bucket
         }
         let points = buckets.values.sorted { $0.day < $1.day }.compactMap { day -> HistoryPoint? in
             guard let date = DayKey.date(day.day, in: timeZone)
                 ?? DayKey.date(day.day, in: TimeZone(secondsFromGMT: 0)!) else { return nil }
-            return HistoryPoint(day: day.day, date: date, automatic: day.automatic, manual: day.manual)
+            return HistoryPoint(day: day.day, date: date, automatic: day.automatic, manual: day.manual, shortcuts: day.shortcuts)
         }
         return HistorySeries(points: points, grouping: grouping)
     }

@@ -1,6 +1,58 @@
 import XCTest
+#if DUO_HINGE_API && TEST_SHORTCUT_DISPATCH && canImport(AppIntentsTesting)
+import AppIntentsTesting
+#endif
 
 final class FoldCounterUITests: XCTestCase {
+    #if DUO_HINGE_API && TEST_SHORTCUT_DISPATCH && canImport(AppIntentsTesting)
+    @MainActor func testRecordOpeningActionWhileAnotherAppIsFrontmost() async throws {
+        guard #available(iOS 27.2, *) else { throw XCTSkip("Use an iOS 27.2+ runtime matching Xcode for Shortcuts setup") }
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--reset-test-data"]
+        app.launch()
+        let count = app.staticTexts["todayCount"]
+        XCTAssertTrue(count.waitForExistence(timeout: 10))
+        XCTAssertEqual(count.value as? String, "0")
+
+        openTab("Settings", in: app)
+        let shortcutsLink = app.buttons["openHingeCounterShortcuts"]
+        XCTAssertFalse(shortcutsLink.exists)
+        let installer = app.buttons["installOpeningAutomation"]
+        XCTAssertFalse(installer.exists)
+        app.buttons["countingMethod"].tap()
+        app.buttons["Shortcuts"].firstMatch.tap()
+        let status = app.staticTexts["trackingStatus"].label
+        XCTAssertTrue(status.hasSuffix("Shortcuts selected"), status)
+        if installer.exists { app.buttons["manualOpeningSetup"].tap() }
+        XCTAssertTrue(shortcutsLink.waitForExistence(timeout: 5))
+        openTab("Today", in: app)
+
+        XCUIDevice.shared.press(.home)
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        settings.activate()
+        XCTAssertTrue(settings.wait(for: .runningForeground, timeout: 10))
+        let backgrounded = app.wait(for: .runningBackground, timeout: 5)
+            || app.wait(for: .runningBackgroundSuspended, timeout: 10)
+        XCTAssertTrue(backgrounded, "Hinge Counter state before dispatch: \(app.state.rawValue)")
+        let testBundleID = try XCTUnwrap(Bundle(for: Self.self).bundleIdentifier)
+        XCTAssertTrue(testBundleID.hasSuffix(".uitests"))
+        let definitions = IntentDefinitions(bundleIdentifier: String(testBundleID.dropLast(".uitests".count)))
+        let record = definitions.intents["RecordOpeningIntent"].makeIntent()
+        _ = try await record.run()
+        XCTAssertEqual(settings.state, .runningForeground)
+        XCTAssertNotEqual(app.state, .runningForeground)
+        app.activate()
+        XCTAssertEqual(count.value as? String, "1")
+        XCTAssertTrue(app.staticTexts["0 observed · 1 Shortcuts · 0 manual"].exists)
+
+        app.terminate()
+        app.launchArguments = ["--ui-testing"]
+        app.launch()
+        XCTAssertTrue(count.waitForExistence(timeout: 10))
+        XCTAssertEqual(count.value as? String, "1")
+    }
+    #endif
+
     @MainActor func testAllHistoryShowsRecordsOlderThanNinetyDays() {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-test-data", "--history-fixture"]

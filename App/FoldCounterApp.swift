@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct FoldCounterApp: App {
     // One app-wide model is shared by every window. Never create a counter per scene.
-    @State private var model = CounterModel()
+    @State private var model = CounterModel.shared
 
     var body: some Scene {
         WindowGroup {

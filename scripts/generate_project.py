@@ -9,6 +9,9 @@ import json
 import os
 from pathlib import Path
 import struct
+import sys
+
+from opening_shortcut import BUNDLED as OPENING_SHORTCUT, verify as verify_opening_shortcut
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "FoldCounter.xcodeproj"
@@ -46,6 +49,8 @@ def file_ref(path: str) -> str:
     if key not in objects:
         kind = "sourcecode.swift" if path.endswith(".swift") else (
             "folder.assetcatalog" if path.endswith(".xcassets") else "text.xml")
+        if path.endswith(".shortcut"):
+            kind = "file"
         add(name, "PBXFileReference", lastKnownFileType=kind, path=path, sourceTree="SOURCE_ROOT")
     return key
 
@@ -103,6 +108,10 @@ def target(name: str, files: list[str], product_type: str, extension: str,
     if name == "FoldCounter":
         resources.append(file_ref("Resources/Assets.xcassets"))
         resources.append(file_ref("Resources/HelpContent.json"))
+        if OPENING_SHORTCUT.exists():
+            if sys.platform == "darwin":
+                verify_opening_shortcut(OPENING_SHORTCUT)
+            resources.append(file_ref(str(OPENING_SHORTCUT.relative_to(ROOT))))
     phases.append(phase(name, "Resources", "PBXResourcesBuildPhase", resources))
     settings = {"PRODUCT_NAME": "$(TARGET_NAME)", "PRODUCT_BUNDLE_IDENTIFIER": bundle_id,
                 "CODE_SIGN_STYLE": "Automatic", "DEVELOPMENT_TEAM": "$(inherited)",

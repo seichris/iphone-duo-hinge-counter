@@ -333,7 +333,7 @@ func invalidAnglesBreakContinuity(angle: Double) {
     try a.record(.manual, at: noon, timeZone: utc)
     let data = try ArchiveFile.encode(a)
     #expect(try ArchiveFile.decode(data) == a)
-    #expect(a.csv().contains("2026-09-14,0,1,1\r\n"))
+    #expect(a.csv().contains("2026-09-14,0,1,1,0\r\n"))
 }
 
 @Test func oversizedImportIsRejected() {
