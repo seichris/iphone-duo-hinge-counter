@@ -1,4 +1,4 @@
-Hinge Counter 1.1.2 (10)
+Hinge Counter 1.1.2 (11)
 
 This update adds a background Record Opening App Intent and a native link to Hinge Counter's page in Shortcuts. On iPhone Duo with iOS 27.2 or later, select Settings > Counting method > Shortcuts and turn on Shortcuts counting. Touch and hold Record Opening in Shortcuts and choose New Shortcut. In the editor's action library, choose Automation, then the iPhone opening/closing trigger. Select Opened only and allow immediate runs. Keep one opening-only automation enabled.
 
