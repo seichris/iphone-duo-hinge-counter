@@ -6,7 +6,7 @@ import AppIntents
 @available(iOS 27.1, *)
 struct RecordOpeningIntent: AppIntent {
     static let title: LocalizedStringResource = "Record Opening"
-    static let description = IntentDescription("Save one Shortcuts entry. Use with the iPhone Duo opening automation after selecting Shortcuts in Hinge Counter settings.")
+    static let description = IntentDescription("Save one Shortcuts entry. Select Shortcuts in Hinge Counter settings before using this action.")
     static let supportedModes: IntentModes = .background
 
     @MainActor
