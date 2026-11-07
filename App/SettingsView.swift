@@ -38,7 +38,20 @@ struct SettingsView: View {
                 LabeledContent("Version", value: appVersion)
             }
             Section {
-                Toggle("Automatic foreground tracking", isOn: Binding(
+                if CounterModel.supportsOpeningAutomation || model.archive?.countingMethod == .shortcuts {
+                    Picker("Counting method", selection: Binding(
+                        get: { model.archive?.countingMethod ?? .foreground },
+                        set: { model.setCountingMethod($0) }
+                    )) {
+                        Text("Foreground sensor").tag(CountingMethod.foreground)
+                        Text("Shortcuts").tag(CountingMethod.shortcuts)
+                            .disabled(!CounterModel.supportsOpeningAutomation)
+                    }
+                    .pickerStyle(.menu)
+                    .accessibilityIdentifier("countingMethod")
+                    .disabled(!model.canEdit)
+                }
+                Toggle(model.archive?.countingMethod == .shortcuts ? "Shortcuts counting" : "Automatic foreground tracking", isOn: Binding(
                     get: { model.archive?.automaticTrackingEnabled ?? false },
                     set: { model.setAutomaticTracking($0) }
                 )).disabled(!model.canEdit)
@@ -46,9 +59,21 @@ struct SettingsView: View {
                     Text(model.trackingTitle).accessibilityIdentifier("trackingStatus")
                 }
             } header: { Text("Tracking") } footer: {
-                Text(model.trackingDetail + " Counting requires observing ≤10°, then ≥170°, at least 0.35 seconds apart. "
-                     + "These are this app’s counting thresholds, not a hinge-health measurement.")
+                if model.archive?.countingMethod == .shortcuts {
+                    if CounterModel.supportsOpeningAutomation {
+                        Text("Each run of Record Opening saves one Shortcuts entry, including when you run it by hand.")
+                    } else {
+                        Text("Setting up an opening automation requires iPhone Duo with iOS 27.2 or later.")
+                    }
+                } else {
+                    Text(model.trackingDetail + " The sensor counts ≤10°, then ≥170°, at least 0.35 seconds apart.")
+                }
             }
+            #if DUO_HINGE_API
+            if CounterModel.supportsOpeningAutomation, model.archive?.countingMethod == .shortcuts {
+                OpeningAutomationSetup()
+            }
+            #endif
             if let error = model.storageError {
                 Section("Storage") {
                     Text(error)

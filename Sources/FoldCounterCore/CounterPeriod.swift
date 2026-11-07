@@ -7,7 +7,8 @@ public enum CounterPeriod: String, CaseIterable, Sendable {
 public struct PeriodCount: Equatable, Sendable {
     public let automatic: Int
     public let manual: Int
-    public var total: Int { automatic + manual }
+    public var shortcuts = 0
+    public var total: Int { automatic + manual + shortcuts }
 }
 
 extension CounterArchive {
@@ -30,12 +31,14 @@ extension CounterArchive {
         }
         var automatic = 0
         var manual = 0
+        var shortcuts = 0
         for day in days {
             guard period == .allTime || (start.map { day.day >= $0 && day.day <= today } ?? false) else { continue }
             automatic += day.automatic
             manual += day.manual
+            shortcuts += day.shortcuts
         }
-        return PeriodCount(automatic: automatic, manual: manual)
+        return PeriodCount(automatic: automatic, manual: manual, shortcuts: shortcuts)
     }
 }
 

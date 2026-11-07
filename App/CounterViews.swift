@@ -134,11 +134,13 @@ struct DashboardView: View {
                 .accessibilityLabel("Recorded opens today")
                 .accessibilityValue(summary.today.formatted())
             Text("recorded opens").font(.title3).foregroundStyle(.secondary)
-            Text("\(summary.automaticToday) observed · \(summary.manualToday) manual")
+            Text("\(summary.automaticToday) observed · \(summary.shortcutsToday) Shortcuts · \(summary.manualToday) manual")
                 .font(.subheadline).foregroundStyle(.secondary)
             Divider().padding(.top, 8)
-            Text(model.angle.map { "Live hinge · \(Int($0.rounded()))°" } ?? "No live hinge reading")
-                .font(.caption).foregroundStyle(.secondary)
+            if model.archive?.countingMethod == .foreground {
+                Text(model.angle.map { "Live hinge · \(Int($0.rounded()))°" } ?? "No live hinge reading")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
         .counterCard()
@@ -212,10 +214,12 @@ struct HistoryChart: View {
             Chart(points) { point in
                 BarMark(x: .value("Date", point.date, unit: series.grouping.calendarComponent), y: .value("Opens", point.automatic))
                     .foregroundStyle(by: .value("Source", "Observed"))
+                BarMark(x: .value("Date", point.date, unit: series.grouping.calendarComponent), y: .value("Opens", point.shortcuts))
+                    .foregroundStyle(by: .value("Source", "Shortcuts"))
                 BarMark(x: .value("Date", point.date, unit: series.grouping.calendarComponent), y: .value("Opens", point.manual))
                     .foregroundStyle(by: .value("Source", "Manual"))
             }
-            .chartForegroundStyleScale(["Observed": Color.mint, "Manual": Color.indigo])
+            .chartForegroundStyleScale(["Observed": Color.mint, "Shortcuts": Color.orange, "Manual": Color.indigo])
             .chartYScale(domain: 0...max(1, points.map(\.total).max() ?? 1))
             .chartXAxis {
                 if let days {
@@ -229,7 +233,7 @@ struct HistoryChart: View {
                 }
             }
             .frame(height: 200)
-            .accessibilityLabel("Recorded opens, separated into observed and manual counts")
+            .accessibilityLabel("Recorded opens by source: observed, Shortcuts and manual")
             Text("Zero means no opens recorded, not proof that the phone stayed closed.")
                 .font(.caption).foregroundStyle(.secondary)
         }
@@ -291,7 +295,7 @@ private struct HistoryDayRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(day.day)
-                Text("\(day.automatic) observed · \(day.manual) manual")
+                Text("\(day.automatic) observed · \(day.shortcuts) Shortcuts · \(day.manual) manual")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()

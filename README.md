@@ -4,11 +4,13 @@ A native, offline SwiftUI hinge-opening counter. The app uses the supplied Duo C
 
 **Status — October 18, 2026:** the Duo scheme now builds against the iOS 27.1 SDK and directly uses Apple's public `UIHingeInteraction`. It retains the explicit `DUO_HINGE_API` gate. Local build, simulator, signing and physical evidence are recorded separately in [validation](docs/VALIDATION.md). Physical angle endpoints and display handoff remain qualification gates. The regular scheme does **not** claim to detect a hinge.
 
-**This is not a 24/7 background hinge counter.** No documented background hinge-event history API was found. The live adapter observes only while the app has an active scene; counts across suspension, lock, termination, or switching apps are not reconstructed. Opening this app on an already-open device does not add a count. Read [the research and capability boundaries](docs/RESEARCH.md) before changing product claims.
+**Counting while another app is open.** On iPhone Duo with iOS 27.2 or later, choose **Settings → Counting method → Shortcuts** and enable counting. Builds with the verified signed template offer **Add opening automation**. Open the file in Shortcuts, add it and enable its opening trigger on this phone. If the system offers Files, save the file and tap it there. For manual setup, open Hinge Counter’s Shortcuts page, touch and hold **Record Opening**, and choose **New Shortcut**. In the editor, tap **Search** if the action library is hidden. Choose **Automation → When my iPhone is opened or closed**. Select **Opened** only and allow immediate runs. Keep one automation enabled per phone. Each successful run adds one entry, including a hand-run shortcut. Delivery on physical hardware is a release check. [Apple's Shortcuts release notes](https://support.apple.com/en-us/149045)
+
+The default foreground sensor counts complete transitions observed while the app is active. Selecting Shortcuts turns off sensor counting. Neither method recovers openings missed before setup or during a gap. See the [research and capability boundaries](docs/RESEARCH.md).
 
 ## Included
 
-- Today, all-time recorded totals, and daily average; observed and manual counts kept separate.
+- Today, all-time recorded totals and daily average include separately labeled sensor, Shortcuts and manual counts.
 - Seven-, 30-, and 90-day charts plus **All** history. Longer spans use monthly/yearly chart totals; paged daily breakdowns expose every saved date. History never expires just because it is old.
 - Adaptive compact/regular layouts, native navigation, dark mode, Dynamic Type, and Reduce Motion support. The same size-class layout keeps both panels reachable on Duo and ordinary iPhones.
 - A one-leader, multiwindow-safe hinge state machine with wide angle hysteresis, duplicate rejection, and lifecycle invalidation.

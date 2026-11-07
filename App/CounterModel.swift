@@ -4,6 +4,8 @@ import WidgetKit
 
 @MainActor @Observable
 final class CounterModel {
+    // Both SwiftUI and the app-target-only Shortcuts action use this serial writer.
+    static let shared = CounterModel()
     private(set) var archive: CounterArchive?
     private(set) var storageError: String?
     var actionError: String?
@@ -22,7 +24,7 @@ final class CounterModel {
     @ObservationIgnored private let clock = ContinuousClock()
     @ObservationIgnored private let origin = ContinuousClock.now
 
-    init() {
+    private init() {
         var directory = URL.applicationSupportDirectory.appendingPathComponent("FoldCounter", isDirectory: true)
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
@@ -54,9 +56,19 @@ final class CounterModel {
     var rawArchiveURL: URL { file.url }
     var canEdit: Bool { archive != nil && storageError == nil && !pendingSave }
 
+    static var supportsOpeningAutomation: Bool {
+        #if DUO_HINGE_API
+        if #available(iOS 27.2, *) { return true }
+        #endif
+        return false
+    }
+
     var trackingTitle: String {
         if storageError != nil { return "Storage needs attention" }
         if archive?.automaticTrackingEnabled == false { return "Tracking paused" }
+        if archive?.countingMethod == .shortcuts {
+            return Self.supportsOpeningAutomation ? "Shortcuts selected" : "Opening automation unavailable"
+        }
         #if DUO_HINGE_API
         if #available(iOS 27.1, *) {
             if !foreground { return "Observation paused" }
@@ -71,8 +83,14 @@ final class CounterModel {
     }
 
     var trackingDetail: String {
-        "Automatic counts require this app to be active and a complete close-to-open transition to be observed. "
-        + "Openings while locked, in another app, suspended, or terminated are not recovered."
+        if archive?.countingMethod == .shortcuts {
+            return "Each run of Record Opening saves one Shortcuts entry. Set up one opening automation on an iPhone Duo with iOS 27.2 or later. Missed runs cannot be recovered."
+        }
+        var detail = "The foreground sensor counts a complete close-to-open movement while this app is active. Openings outside that session are not recovered."
+        if Self.supportsOpeningAutomation {
+            detail += " To count while using another app on iPhone Duo, choose Shortcuts in Settings."
+        }
+        return detail
     }
 
     func setScene(_ id: UUID, active: Bool) {
@@ -117,6 +135,31 @@ final class CounterModel {
         persist(candidate)
     }
 
+    func setCountingMethod(_ method: CountingMethod) {
+        guard canEdit, var candidate = archive, candidate.countingMethod != method else { return }
+        session.invalidate()
+        candidate.countingMethod = method
+        persist(candidate)
+    }
+
+    func recordShortcutOpening() throws {
+        // A cold launch may have happened before protected storage was available.
+        if storageError != nil && !pendingSave { reload() }
+        guard canEdit, var candidate = archive else {
+            throw CounterDataError.invalid(storageError ?? "Open Hinge Counter to check storage.")
+        }
+        try candidate.record(.shortcut, at: Date(), timeZone: .current)
+        do {
+            try saveAndPublish(candidate)
+        } catch {
+            // Report failure to Shortcuts. Retaining this invocation for a later UI
+            // retry as well could count a failed action twice if the user reruns it.
+            storageError = "The Shortcuts opening could not be saved. " + error.localizedDescription
+            updateObservation()
+            throw error
+        }
+    }
+
     func restore(_ candidate: CounterArchive) {
         guard !pendingSave else { return }
         do {
@@ -128,7 +171,12 @@ final class CounterModel {
 
     func erase() {
         session.invalidate()
-        persist(CounterArchive())
+        var empty = CounterArchive()
+        if let archive {
+            empty.countingMethod = archive.countingMethod
+            empty.automaticTrackingEnabled = archive.automaticTrackingEnabled
+        }
+        persist(empty)
     }
 
     func retrySaveOrLoad() {
@@ -154,12 +202,7 @@ final class CounterModel {
     private func persist(_ candidate: CounterArchive) {
         defer { updateObservation() }
         do {
-            try file.save(candidate)
-            archive = candidate
-            pendingArchive = nil
-            pendingSave = false
-            storageError = nil
-            publishWidget(candidate)
+            try saveAndPublish(candidate)
         } catch {
             pendingArchive = candidate
             pendingSave = true
@@ -168,8 +211,17 @@ final class CounterModel {
         }
     }
 
+    private func saveAndPublish(_ candidate: CounterArchive) throws {
+        try file.save(candidate)
+        archive = candidate
+        pendingArchive = nil
+        pendingSave = false
+        storageError = nil
+        publishWidget(candidate)
+    }
+
     private func updateObservation() {
-        session.setEnabled(canEdit && archive?.automaticTrackingEnabled == true)
+        session.setEnabled(canEdit && archive?.observesHinge == true)
         sensorLeader = session.isEnabled ? session.leader : nil
         let nextID = sensorLeader.map { _ in session.observationID }
         if observationID != nextID {

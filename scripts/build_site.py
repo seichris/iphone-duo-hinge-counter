@@ -26,14 +26,14 @@ def render_pages(root: Path) -> dict[str, str]:
     body = '''<p class="status">Available for review · release is manually controlled</p>
 <h1>Hinge Counter<br>for iPhone Duo</h1><p class="lead">A clear record of the openings you observe.</p>
 <p>See recorded daily totals, history charts and saved widget counts. Keep manual entries separate from sensor observations. No account, ads or analytics.</p>
-<p class="notice"><strong>Foreground-only, not 24/7.</strong> Automatic counting requires supported hardware and a complete close-to-open movement observed while this app is active. Missed openings are not recovered. The Duo SDK path is validated on the iPhone Duo simulator.</p>
+<p class="notice">The foreground sensor counts complete openings while the app is active. The development version also offers a Shortcuts counting method for iPhone Duo on iOS 27.2 or later. It requires a personal opening automation. Missed openings cannot be recovered.</p>
 <p><a href="https://github.com/seichris/iphone-duo-hinge-counter">Follow development on GitHub</a> · <a href="support.html">How counting works</a></p>
 <section><h2>Understand your recorded openings</h2><p>Today's count, an all-time recorded total and a daily average. Explore 7-, 30- and 90-day history without treating incomplete observations as a device-lifetime total.</p></section>
 <section><h2>Keep your history in your hands</h2><p>Store records locally, export CSV, create a JSON backup and restore or erase your history. Home Screen and Lock Screen widgets show saved snapshots; they do not monitor the hinge.</p></section>
-<section><h2>Can an iPhone hinge counter track every opening?</h2><p>Not this implementation. It only counts a complete transition observed while active. Locking the phone, switching apps and display handoff may interrupt observation. It does not measure hinge health, remaining lifespan or warranty eligibility.</p></section>
+<section><h2>Can an iPhone hinge counter track every opening?</h2><p>The foreground sensor has gaps when you switch apps. In the development version, the Shortcuts action records each run of your opening automation. Earlier folds and missed runs cannot be recovered.</p></section>
 <section><h2>Can I try it without a foldable phone?</h2><p>The development build provides manual entries and an isolated unsaved demo on supported iOS versions. A demo count is never presented as a real hardware observation.</p></section>'''
     pages["index.html"] = page("Hinge Counter for iPhone Duo | Recorded Opening History",
-        "An independent hinge counter in development for iPhone Duo: recorded openings, daily history, widgets and local backups. Foreground-only, not 24/7 tracking.", "", body)
+        "An independent hinge counter in development for iPhone Duo. Record openings with the foreground sensor or an optional Shortcuts automation, and see daily totals and history.", "", body)
     for key, title in (("privacy", "Privacy Policy"), ("support", "Help & Support")):
         body = f'<h1>{title}</h1><p>Hinge Counter · updated {escape(help_content["updated"])}</p>'
         for item in help_content[key]:
