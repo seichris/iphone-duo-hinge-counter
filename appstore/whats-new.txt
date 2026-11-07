@@ -1,0 +1,1 @@
+Add Record Opening to Shortcuts and choose between foreground sensor tracking and Shortcuts entries. Setup instructions open directly from Settings. Shortcuts entries are labeled separately in history, totals and CSV exports.
